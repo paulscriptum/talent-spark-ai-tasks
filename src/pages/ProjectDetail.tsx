@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -16,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { TaskResponse } from '../types';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, Check, FileText, Link2, AlertCircle, Info } from 'lucide-react';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -64,52 +63,132 @@ const ProjectDetail = () => {
     setActiveTab(value);
   };
 
-  // Helper function to split description into sections based on titles
+  // Helper function to parse and structure task sections
   const parseTaskSections = (description: string) => {
-    // Simple approach to identify sections - we expect section titles to be capitalized or end with ":"
-    const lines = description.split('\n');
-    const sections: { title: string; content: string[] }[] = [];
+    // Split the description into sections based on headings
+    const sections = [];
     
-    let currentTitle = "Overview";
-    let currentContent: string[] = [];
+    // First, split by double newlines to identify potential section breaks
+    const blocks = description.split(/\n\n+/);
     
-    lines.forEach(line => {
-      const trimmedLine = line.trim();
+    let currentSection = {
+      title: 'Overview',
+      content: [],
+      type: 'text'
+    };
+    
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i].trim();
       
-      // Skip empty lines
-      if (!trimmedLine) return;
+      // Skip empty blocks
+      if (!block) continue;
       
-      // Check if this looks like a section title (all caps, ends with ":", or contains "&")
-      const isSectionTitle = 
-        /^[A-Z\s\d&:]+$/.test(trimmedLine) || 
-        trimmedLine.endsWith(':') ||
-        trimmedLine.includes('&') && trimmedLine.length < 50;
+      // Check if this block looks like a header (all caps, ends with a colon, etc.)
+      const isHeader = /^[A-Z][A-Z\s&:]+$/.test(block) || 
+                       block.includes(':') && block.split(':')[0].toUpperCase() === block.split(':')[0];
       
-      if (isSectionTitle && currentContent.length > 0) {
-        // Save previous section
-        sections.push({
-          title: currentTitle,
-          content: [...currentContent]
-        });
+      if (isHeader) {
+        // If we have content in the current section, save it
+        if (currentSection.content.length > 0) {
+          sections.push({...currentSection});
+        }
         
-        // Start new section
-        currentTitle = trimmedLine.replace(/:$/, '').trim();
-        currentContent = [];
+        // Start a new section
+        const title = block.replace(/:$/, '');
+        
+        // Determine section type based on keywords
+        let type = 'text';
+        if (title.toLowerCase().includes('time') || title.toLowerCase().includes('deadline') || 
+            title.toLowerCase().includes('limit')) {
+          type = 'time';
+        } else if (title.toLowerCase().includes('note')) {
+          type = 'note';
+        } else if (title.toLowerCase().includes('requirement') || title.toLowerCase().includes('objective')) {
+          type = 'requirements';
+        } else if (title.toLowerCase().includes('deliverable')) {
+          type = 'deliverables';
+        } else if (title.toLowerCase().includes('evaluation') || title.toLowerCase().includes('criteria')) {
+          type = 'evaluation';
+        } else if (title.toLowerCase().includes('submission') || title.toLowerCase().includes('instruction')) {
+          type = 'instructions';
+        }
+        
+        currentSection = {
+          title,
+          content: [],
+          type
+        };
       } else {
-        // Add to current section content
-        currentContent.push(trimmedLine);
+        // Add this block to the current section
+        currentSection.content.push(block);
       }
-    });
+    }
     
-    // Add the last section
-    if (currentContent.length > 0) {
-      sections.push({
-        title: currentTitle,
-        content: currentContent
-      });
+    // Add the last section if it has content
+    if (currentSection.content.length > 0) {
+      sections.push(currentSection);
     }
     
     return sections;
+  };
+
+  // Format content based on section type
+  const renderSectionContent = (section) => {
+    switch(section.type) {
+      case 'time':
+        return (
+          <div className="task-time-block">
+            <Clock className="text-primary h-5 w-5" />
+            <div>{section.content.join(' ')}</div>
+          </div>
+        );
+      
+      case 'note':
+        return (
+          <div className="task-note-block">
+            <div className="flex gap-2 items-center mb-2">
+              <Info className="text-primary h-4 w-4" />
+              <span className="font-semibold">Note:</span>
+            </div>
+            <div>{section.content.join(' ')}</div>
+          </div>
+        );
+      
+      case 'requirements':
+      case 'deliverables':
+      case 'evaluation':
+      case 'instructions':
+        // Parse bullet points if content starts with bullets
+        const hasBullets = section.content.some(line => line.trim().startsWith('•') || 
+                                                        line.trim().startsWith('-') || 
+                                                        line.trim().startsWith('*'));
+        
+        if (hasBullets) {
+          return (
+            <div className="space-y-3">
+              {section.content.map((item, i) => {
+                const cleanItem = item.trim().replace(/^[•\-*]\s*/, '');
+                return cleanItem ? (
+                  <div key={i} className="task-list-item">
+                    <div>{cleanItem}</div>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          );
+        }
+        
+        // Fall through to default case if no bullets detected
+      
+      default:
+        return (
+          <div className="space-y-4">
+            {section.content.map((paragraph, i) => (
+              <p key={i}>{paragraph}</p>
+            ))}
+          </div>
+        );
+    }
   };
 
   if (isLoading) {
@@ -174,31 +253,45 @@ const ProjectDetail = () => {
         <TabsContent value="details">
           <div className="grid gap-6 md:grid-cols-5">
             <div className="space-y-6 md:col-span-3">
-              <Card className="glass-card overflow-hidden">
+              {/* Candidate sharing link card */}
+              <Card className="glass-card">
+                <CardHeader className="glass-header">
+                  <CardTitle className="text-xl">Share with Candidates</CardTitle>
+                  <CardDescription>Send this link to candidates to complete the test task</CardDescription>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-black/60 rounded-md border border-white/10 px-3 py-2 text-sm flex-1 overflow-hidden">
+                      <div className="truncate">
+                        https://{window.location.hostname}/tasks/{id}/submit
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" className="shrink-0">
+                      Copy
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Task Content Card */}
+              <Card className="glass-card">
                 <CardHeader className="glass-header">
                   <CardTitle>Task Content</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   {taskSections.map((section, idx) => (
-                    <div key={idx} className="mb-6 last:mb-0">
-                      <div className="p-6 pb-2">
-                        <h3 className="text-xl font-semibold text-primary mb-3">{section.title}</h3>
-                        {section.title.toLowerCase().includes('time') || section.title.toLowerCase().includes('deadline') ? (
-                          <div className="bg-white/5 rounded-lg p-4 backdrop-blur-sm border border-white/10">
-                            <div className="flex items-center gap-2">
-                              <Clock className="text-primary h-4 w-4" />
-                              <p>{section.content.join(' ')}</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-4">
-                            {section.content.map((paragraph, pIdx) => (
-                              <p key={pIdx} className="text-foreground/90">{paragraph}</p>
-                            ))}
-                          </div>
-                        )}
+                    <div key={idx} className="task-content-section">
+                      <div className="task-content-card">
+                        <div className="task-content-header">
+                          <h2>{section.title}</h2>
+                        </div>
+                        <div className="task-content-body">
+                          {renderSectionContent(section)}
+                        </div>
                       </div>
-                      {idx < taskSections.length - 1 && <Separator className="opacity-20" />}
+                      {idx < taskSections.length - 1 && idx % 3 === 2 && (
+                        <Separator className="my-6 opacity-20" />
+                      )}
                     </div>
                   ))}
                 </CardContent>
