@@ -22,6 +22,7 @@ const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [newResponse, setNewResponse] = useState({ candidateName: '', responseContent: '' });
+  const [activeTab, setActiveTab] = useState("details");
   
   const { data: task, isLoading } = useQuery({
     queryKey: ['task', id],
@@ -57,6 +58,10 @@ const ProjectDetail = () => {
     }
     
     submitResponseMutation.mutate(newResponse);
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
   if (isLoading) {
@@ -107,7 +112,7 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="details">
+      <Tabs defaultValue="details" onValueChange={handleTabChange} value={activeTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="details">Task Details</TabsTrigger>
           <TabsTrigger value="responses">
@@ -118,39 +123,43 @@ const ProjectDetail = () => {
         
         <TabsContent value="details">
           <div className="grid gap-6 md:grid-cols-5">
-            <Card className="md:col-span-3">
+            <Card className="md:col-span-3 card-gradient">
               <CardHeader>
                 <CardTitle>Description</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>{task.description}</p>
+                {task.description.split('\n\n').map((paragraph, idx) => (
+                  <div key={idx} className="content-block">
+                    <p>{paragraph}</p>
+                  </div>
+                ))}
               </CardContent>
             </Card>
             
             <div className="md:col-span-2 space-y-6">
-              <Card>
+              <Card className="card-gradient">
                 <CardHeader>
                   <CardTitle>Brand Definition</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Company</h4>
+                  <div className="content-block">
+                    <h4 className="text-sm font-medium text-primary mb-1">Company</h4>
                     <p>{task.brandDefinition.companyName}</p>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Industry</h4>
+                  <div className="content-block">
+                    <h4 className="text-sm font-medium text-primary mb-1">Industry</h4>
                     <p>{task.brandDefinition.industry}</p>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Target Audience</h4>
+                  <div className="content-block">
+                    <h4 className="text-sm font-medium text-primary mb-1">Target Audience</h4>
                     <p>{task.brandDefinition.targetAudience}</p>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Brand Tone</h4>
+                  <div className="content-block">
+                    <h4 className="text-sm font-medium text-primary mb-1">Brand Tone</h4>
                     <p>{task.brandDefinition.tone}</p>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Company Values</h4>
+                  <div className="content-block">
+                    <h4 className="text-sm font-medium text-primary mb-1">Company Values</h4>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {task.brandDefinition.companyValues.map((value, idx) => (
                         <Badge key={idx} variant="outline" className="bg-primary/10">
@@ -160,31 +169,31 @@ const ProjectDetail = () => {
                     </div>
                   </div>
                   {task.brandDefinition.additionalInfo && (
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-1">Additional Information</h4>
+                    <div className="content-block">
+                      <h4 className="text-sm font-medium text-primary mb-1">Additional Information</h4>
                       <p className="text-sm">{task.brandDefinition.additionalInfo}</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="card-gradient">
                 <CardHeader>
                   <CardTitle>Task Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Created</h4>
+                  <div className="content-block">
+                    <h4 className="text-sm font-medium text-primary mb-1">Created</h4>
                     <p>{format(new Date(task.createdAt), 'PPP')}</p>
                   </div>
                   {task.deadline && (
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-1">Deadline</h4>
+                    <div className="content-block">
+                      <h4 className="text-sm font-medium text-primary mb-1">Deadline</h4>
                       <p>{format(new Date(task.deadline), 'PPP')}</p>
                     </div>
                   )}
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Responses</h4>
+                  <div className="content-block">
+                    <h4 className="text-sm font-medium text-primary mb-1">Responses</h4>
                     <p>{task.responses.length}</p>
                   </div>
                 </CardContent>
@@ -196,21 +205,21 @@ const ProjectDetail = () => {
         <TabsContent value="responses">
           <div className="space-y-6">
             {task.responses.length === 0 ? (
-              <Card className="text-center py-12">
+              <Card className="text-center py-12 card-gradient">
                 <CardContent>
                   <h3 className="text-xl font-medium mb-2">No responses yet</h3>
                   <p className="text-muted-foreground mb-6">
                     There are no candidate responses for this task yet.
                   </p>
-                  <Button onClick={() => document.querySelector('[data-value="submit"]')?.click()}>
+                  <Button onClick={() => setActiveTab("submit")}>
                     Submit a Response
                   </Button>
                 </CardContent>
               </Card>
             ) : (
               task.responses.map(response => (
-                <Card key={response.id} className="overflow-hidden">
-                  <CardHeader className="bg-muted/50">
+                <Card key={response.id} className="overflow-hidden card-gradient">
+                  <CardHeader className="bg-secondary/50">
                     <div className="flex justify-between items-center">
                       <CardTitle className="text-lg">{response.candidateName}</CardTitle>
                       <div className="text-sm text-muted-foreground">
@@ -220,17 +229,17 @@ const ProjectDetail = () => {
                   </CardHeader>
                   <CardContent className="pt-6 grid md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-sm font-medium mb-2">Response</h3>
-                      <div className="bg-muted/30 p-4 rounded-md">
-                        <p className="whitespace-pre-wrap">{response.responseContent}</p>
+                      <h3 className="text-sm font-medium mb-2 text-primary">Response</h3>
+                      <div className="content-block whitespace-pre-wrap">
+                        <p>{response.responseContent}</p>
                       </div>
                     </div>
                     
                     {response.aiAnalysis && (
                       <div className="space-y-4">
-                        <h3 className="text-sm font-medium mb-2">AI Analysis</h3>
+                        <h3 className="text-sm font-medium mb-2 text-primary">AI Analysis</h3>
                         
-                        <div>
+                        <div className="content-block">
                           <div className="flex justify-between text-sm mb-1">
                             <span>Overall Score</span>
                             <span className="font-medium">{response.aiAnalysis.overallScore}/100</span>
@@ -238,7 +247,7 @@ const ProjectDetail = () => {
                           <Progress value={response.aiAnalysis.overallScore} className="h-2" />
                         </div>
                         
-                        <div className="space-y-3">
+                        <div className="space-y-3 content-block">
                           <div>
                             <div className="flex justify-between text-sm mb-1">
                               <span>Fit to Brand</span>
@@ -264,14 +273,14 @@ const ProjectDetail = () => {
                           </div>
                         </div>
                         
-                        <div>
-                          <h4 className="text-sm font-medium mb-1">Summary</h4>
+                        <div className="content-block">
+                          <h4 className="text-sm font-medium mb-1 text-primary">Summary</h4>
                           <p className="text-sm">{response.aiAnalysis.summary}</p>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4 pt-2">
-                          <div>
-                            <h4 className="text-sm font-medium text-green-600 mb-1">Strengths</h4>
+                          <div className="content-block">
+                            <h4 className="text-sm font-medium text-green-400 mb-1">Strengths</h4>
                             <ul className="text-sm list-disc list-inside space-y-1">
                               {response.aiAnalysis.strengths.map((strength, idx) => (
                                 <li key={idx}>{strength}</li>
@@ -279,8 +288,8 @@ const ProjectDetail = () => {
                             </ul>
                           </div>
                           
-                          <div>
-                            <h4 className="text-sm font-medium text-red-600 mb-1">Areas to Improve</h4>
+                          <div className="content-block">
+                            <h4 className="text-sm font-medium text-red-400 mb-1">Areas to Improve</h4>
                             <ul className="text-sm list-disc list-inside space-y-1">
                               {response.aiAnalysis.weaknesses.map((weakness, idx) => (
                                 <li key={idx}>{weakness}</li>
@@ -298,7 +307,7 @@ const ProjectDetail = () => {
         </TabsContent>
         
         <TabsContent value="submit">
-          <Card>
+          <Card className="card-gradient">
             <CardHeader>
               <CardTitle>Submit a Response</CardTitle>
               <CardDescription>
@@ -314,6 +323,7 @@ const ProjectDetail = () => {
                     value={newResponse.candidateName}
                     onChange={(e) => setNewResponse(prev => ({ ...prev, candidateName: e.target.value }))}
                     placeholder="Enter candidate's full name"
+                    className="bg-background/50"
                   />
                 </div>
                 
@@ -325,6 +335,7 @@ const ProjectDetail = () => {
                     onChange={(e) => setNewResponse(prev => ({ ...prev, responseContent: e.target.value }))}
                     placeholder="Enter the candidate's response to this task..."
                     rows={10}
+                    className="bg-background/50"
                   />
                 </div>
               </div>

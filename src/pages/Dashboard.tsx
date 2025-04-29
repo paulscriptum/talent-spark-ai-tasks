@@ -4,7 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { taskService } from '../services/taskService';
 import Layout from '../components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Link } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 const Dashboard = () => {
   const { data: stats, isLoading } = useQuery({
@@ -17,12 +19,6 @@ const Dashboard = () => {
     queryFn: taskService.getAllTasks,
   });
 
-  const chartData = [
-    { name: 'Active Tasks', value: stats?.activeTasks || 0, fill: '#3b82f6' },
-    { name: 'Completed', value: stats?.completedTasks || 0, fill: '#10b981' },
-    { name: 'Candidates', value: stats?.totalCandidates || 0, fill: '#f97316' },
-  ];
-
   return (
     <Layout className="space-y-6">
       <div>
@@ -33,7 +29,7 @@ const Dashboard = () => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="card-gradient">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Active Tasks
@@ -49,7 +45,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="card-gradient">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Completed Tasks
@@ -65,7 +61,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="card-gradient">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Candidates
@@ -81,7 +77,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="card-gradient">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Average Response Score
@@ -98,33 +94,59 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <Card className="col-span-2">
+      <Card className="card-gradient">
         <CardHeader>
-          <CardTitle>Task Overview</CardTitle>
+          <CardTitle>Recent Tasks</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" nameKey="name" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {!tasks || tasks.length === 0 ? (
+            <div className="text-center p-6 text-muted-foreground">
+              No tasks created yet. Start by generating a new task.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {tasks.slice(0, 3).map((task) => (
+                <Card key={task.id} className="overflow-hidden border-border bg-secondary/30">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-medium">{task.title}</h3>
+                        <p className="text-sm text-muted-foreground">{task.brandDefinition.companyName}</p>
+                      </div>
+                      <Badge variant={task.status === 'active' ? 'default' : 'outline'}>
+                        {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center mt-2 text-sm">
+                      <div className="text-muted-foreground">
+                        {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">{task.responses.length} responses</span>
+                        <Link 
+                          to={`/projects/${task.id}`}
+                          className="text-primary hover:underline text-xs font-medium"
+                        >
+                          View Details →
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="card-gradient">
         <CardHeader>
-          <CardTitle>Recent Projects</CardTitle>
+          <CardTitle>Active Projects</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {tasks?.slice(0, 3).map(task => (
-              <div key={task.id} className="flex items-center justify-between p-4 border rounded-md">
+              <div key={task.id} className="flex items-center justify-between p-4 border border-border rounded-md bg-secondary/30">
                 <div>
                   <h3 className="font-medium">{task.title}</h3>
                   <p className="text-sm text-muted-foreground">
@@ -132,7 +154,7 @@ const Dashboard = () => {
                   </p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs ${
-                  task.status === 'active' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                  task.status === 'active' ? 'bg-primary/20 text-primary' : 'bg-green-800/30 text-green-400'
                 }`}>
                   {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
                 </span>

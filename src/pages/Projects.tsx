@@ -30,7 +30,7 @@ const Projects = () => {
           <p>Loading projects...</p>
         </div>
       ) : tasks?.length === 0 ? (
-        <Card className="text-center p-12">
+        <Card className="text-center p-12 card-gradient">
           <CardContent className="pt-10 space-y-4">
             <ClipboardList className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="text-xl font-medium">No projects found</h3>
@@ -45,8 +45,8 @@ const Projects = () => {
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
           {tasks?.map(task => (
-            <Card key={task.id} className="overflow-hidden">
-              <CardHeader className="bg-muted/50 pb-3">
+            <Card key={task.id} className="overflow-hidden card-gradient">
+              <CardHeader className="bg-secondary/50 pb-3">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg">{task.title}</CardTitle>
                   <Badge variant={task.status === 'active' ? 'default' : 'outline'}>
@@ -56,7 +56,9 @@ const Projects = () => {
               </CardHeader>
               <CardContent className="pt-4">
                 <div className="space-y-4">
-                  <p className="text-sm line-clamp-2">{task.description}</p>
+                  <div className="content-block">
+                    <p className="text-sm line-clamp-2">{task.description}</p>
+                  </div>
                   
                   <div className="text-sm text-muted-foreground">
                     <div className="flex justify-between">
