@@ -123,13 +123,13 @@ const ProjectDetail = () => {
         
         <TabsContent value="details">
           <div className="grid gap-6 md:grid-cols-5">
-            <Card className="md:col-span-3 card-gradient">
-              <CardHeader>
+            <Card className="md:col-span-3 glass-card">
+              <CardHeader className="glass-header">
                 <CardTitle>Description</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4 p-6">
                 {task.description.split('\n\n').map((paragraph, idx) => (
-                  <div key={idx} className="content-block">
+                  <div key={idx} className="text-block">
                     <p>{paragraph}</p>
                   </div>
                 ))}
@@ -137,11 +137,11 @@ const ProjectDetail = () => {
             </Card>
             
             <div className="md:col-span-2 space-y-6">
-              <Card className="card-gradient">
-                <CardHeader>
+              <Card className="glass-card">
+                <CardHeader className="glass-header">
                   <CardTitle>Brand Definition</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 p-6">
                   <div className="content-block">
                     <h4 className="text-sm font-medium text-primary mb-1">Company</h4>
                     <p>{task.brandDefinition.companyName}</p>
@@ -177,11 +177,11 @@ const ProjectDetail = () => {
                 </CardContent>
               </Card>
               
-              <Card className="card-gradient">
-                <CardHeader>
+              <Card className="glass-card">
+                <CardHeader className="glass-header">
                   <CardTitle>Task Information</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 p-6">
                   <div className="content-block">
                     <h4 className="text-sm font-medium text-primary mb-1">Created</h4>
                     <p>{format(new Date(task.createdAt), 'PPP')}</p>
@@ -205,7 +205,7 @@ const ProjectDetail = () => {
         <TabsContent value="responses">
           <div className="space-y-6">
             {task.responses.length === 0 ? (
-              <Card className="text-center py-12 card-gradient">
+              <Card className="text-center py-12 glass-card">
                 <CardContent>
                   <h3 className="text-xl font-medium mb-2">No responses yet</h3>
                   <p className="text-muted-foreground mb-6">
@@ -218,8 +218,8 @@ const ProjectDetail = () => {
               </Card>
             ) : (
               task.responses.map(response => (
-                <Card key={response.id} className="overflow-hidden card-gradient">
-                  <CardHeader className="bg-secondary/50">
+                <Card key={response.id} className="overflow-hidden glass-card">
+                  <CardHeader className="glass-header">
                     <div className="flex justify-between items-center">
                       <CardTitle className="text-lg">{response.candidateName}</CardTitle>
                       <div className="text-sm text-muted-foreground">
@@ -307,14 +307,14 @@ const ProjectDetail = () => {
         </TabsContent>
         
         <TabsContent value="submit">
-          <Card className="card-gradient">
-            <CardHeader>
+          <Card className="glass-card">
+            <CardHeader className="glass-header">
               <CardTitle>Submit a Response</CardTitle>
               <CardDescription>
                 Fill out this form to submit a new candidate response for this task
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="candidateName">Candidate Name</Label>
@@ -323,7 +323,7 @@ const ProjectDetail = () => {
                     value={newResponse.candidateName}
                     onChange={(e) => setNewResponse(prev => ({ ...prev, candidateName: e.target.value }))}
                     placeholder="Enter candidate's full name"
-                    className="bg-background/50"
+                    className="bg-black/30"
                   />
                 </div>
                 
@@ -335,12 +335,12 @@ const ProjectDetail = () => {
                     onChange={(e) => setNewResponse(prev => ({ ...prev, responseContent: e.target.value }))}
                     placeholder="Enter the candidate's response to this task..."
                     rows={10}
-                    className="bg-background/50"
+                    className="bg-black/30"
                   />
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end">
+            <CardFooter className="flex justify-end p-6">
               <Button 
                 onClick={handleSubmitResponse} 
                 disabled={submitResponseMutation.isPending}
