@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { TaskResponse } from '../types';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Clock } from 'lucide-react';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -64,6 +64,54 @@ const ProjectDetail = () => {
     setActiveTab(value);
   };
 
+  // Helper function to split description into sections based on titles
+  const parseTaskSections = (description: string) => {
+    // Simple approach to identify sections - we expect section titles to be capitalized or end with ":"
+    const lines = description.split('\n');
+    const sections: { title: string; content: string[] }[] = [];
+    
+    let currentTitle = "Overview";
+    let currentContent: string[] = [];
+    
+    lines.forEach(line => {
+      const trimmedLine = line.trim();
+      
+      // Skip empty lines
+      if (!trimmedLine) return;
+      
+      // Check if this looks like a section title (all caps, ends with ":", or contains "&")
+      const isSectionTitle = 
+        /^[A-Z\s\d&:]+$/.test(trimmedLine) || 
+        trimmedLine.endsWith(':') ||
+        trimmedLine.includes('&') && trimmedLine.length < 50;
+      
+      if (isSectionTitle && currentContent.length > 0) {
+        // Save previous section
+        sections.push({
+          title: currentTitle,
+          content: [...currentContent]
+        });
+        
+        // Start new section
+        currentTitle = trimmedLine.replace(/:$/, '').trim();
+        currentContent = [];
+      } else {
+        // Add to current section content
+        currentContent.push(trimmedLine);
+      }
+    });
+    
+    // Add the last section
+    if (currentContent.length > 0) {
+      sections.push({
+        title: currentTitle,
+        content: currentContent
+      });
+    }
+    
+    return sections;
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -86,6 +134,8 @@ const ProjectDetail = () => {
       </Layout>
     );
   }
+
+  const taskSections = parseTaskSections(task.description);
 
   return (
     <Layout>
@@ -123,18 +173,37 @@ const ProjectDetail = () => {
         
         <TabsContent value="details">
           <div className="grid gap-6 md:grid-cols-5">
-            <Card className="md:col-span-3 glass-card">
-              <CardHeader className="glass-header">
-                <CardTitle>Description</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 p-6">
-                {task.description.split('\n\n').map((paragraph, idx) => (
-                  <div key={idx} className="text-block">
-                    <p>{paragraph}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <div className="space-y-6 md:col-span-3">
+              <Card className="glass-card overflow-hidden">
+                <CardHeader className="glass-header">
+                  <CardTitle>Task Content</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {taskSections.map((section, idx) => (
+                    <div key={idx} className="mb-6 last:mb-0">
+                      <div className="p-6 pb-2">
+                        <h3 className="text-xl font-semibold text-primary mb-3">{section.title}</h3>
+                        {section.title.toLowerCase().includes('time') || section.title.toLowerCase().includes('deadline') ? (
+                          <div className="bg-white/5 rounded-lg p-4 backdrop-blur-sm border border-white/10">
+                            <div className="flex items-center gap-2">
+                              <Clock className="text-primary h-4 w-4" />
+                              <p>{section.content.join(' ')}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {section.content.map((paragraph, pIdx) => (
+                              <p key={pIdx} className="text-foreground/90">{paragraph}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {idx < taskSections.length - 1 && <Separator className="opacity-20" />}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
             
             <div className="md:col-span-2 space-y-6">
               <Card className="glass-card">

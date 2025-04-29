@@ -86,6 +86,23 @@ body {
   @apply bg-white/5 backdrop-blur-md border-b border-white/10;
 }
 
+/* Section styles for task descriptions */
+.task-section {
+  @apply mb-6 last:mb-0 border-b border-white/10 last:border-0 pb-6 last:pb-0;
+}
+
+.task-section-title {
+  @apply text-xl font-semibold text-primary mb-3;
+}
+
+.task-section-content {
+  @apply space-y-4;
+}
+
+.task-highlight-block {
+  @apply bg-primary/10 backdrop-blur-sm p-4 rounded-lg border border-primary/20 flex items-center gap-3;
+}
+
 /* Dark scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
