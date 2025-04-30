@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { taskService } from '../services/taskService';
@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { TaskResponse, TaskSection } from '../types';
-import { ArrowLeft, Clock, Check, FileText, PenLine, Link2, AlertCircle, Info } from 'lucide-react';
+import { ArrowLeft, Clock, Check, FileText, PenLine, Link2, AlertCircle, Info, Copy } from 'lucide-react';
 import { Form, FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 
@@ -26,6 +26,8 @@ const ProjectDetail = () => {
   const [newResponse, setNewResponse] = useState({ candidateName: '', responseContent: '' });
   const [activeTab, setActiveTab] = useState("details");
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const shareLinkRef = useRef<HTMLDivElement>(null);
   
   const { data: task, isLoading, refetch } = useQuery({
     queryKey: ['task', id],
@@ -37,13 +39,7 @@ const ProjectDetail = () => {
     mutationFn: (response: Omit<TaskResponse, 'id' | 'submittedAt' | 'aiAnalysis'>) => {
       if (!id) throw new Error('Task ID is required');
       
-      const newResponseObj: TaskResponse = {
-        ...response,
-        id: `${Date.now()}`,
-        submittedAt: new Date().toISOString()
-      };
-      
-      return taskService.analyzeResponse(id, newResponseObj);
+      return taskService.submitResponse(id, response);
     },
     onSuccess: () => {
       toast.success('Response submitted and analyzed!');
@@ -85,6 +81,20 @@ const ProjectDetail = () => {
   const handleSectionEdit = (sectionId: string, content: string) => {
     if (!id) return;
     updateSectionMutation.mutate({ taskId: id, sectionId, content });
+  };
+
+  const handleCopyLink = () => {
+    const shareLink = `${window.location.origin}/tasks/${id}/submit`;
+    navigator.clipboard.writeText(shareLink)
+      .then(() => {
+        setLinkCopied(true);
+        toast.success('Link copied to clipboard!');
+        setTimeout(() => setLinkCopied(false), 3000);
+      })
+      .catch((err) => {
+        console.error('Error copying link:', err);
+        toast.error('Failed to copy link');
+      });
   };
 
   // Render different section types
@@ -220,6 +230,9 @@ const ProjectDetail = () => {
     );
   }
 
+  // Generate the share link
+  const shareLink = `${window.location.origin}/tasks/${id}/submit`;
+
   return (
     <Layout>
       <div className="mb-6">
@@ -265,13 +278,29 @@ const ProjectDetail = () => {
                 </CardHeader>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <div className="bg-black/60 rounded-md border border-white/10 px-3 py-2 text-sm flex-1 overflow-hidden">
-                      <div className="truncate">
-                        https://{window.location.hostname}/tasks/{id}/submit
-                      </div>
+                    <div 
+                      ref={shareLinkRef}
+                      className="bg-black/60 rounded-md border border-white/10 px-3 py-2 text-sm flex-1 overflow-hidden"
+                    >
+                      <div className="truncate">{shareLink}</div>
                     </div>
-                    <Button variant="outline" size="sm" className="shrink-0">
-                      Copy
+                    <Button
+                      variant="outline" 
+                      size="sm" 
+                      className="shrink-0"
+                      onClick={handleCopyLink}
+                    >
+                      {linkCopied ? (
+                        <>
+                          <Check className="h-4 w-4 mr-2" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardContent>
@@ -420,6 +449,22 @@ const ProjectDetail = () => {
                     <h4 className="text-sm font-medium text-primary mb-1">Responses</h4>
                     <p>{task.responses.length}</p>
                   </div>
+                  <div className="flex justify-end mt-6">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        if (id) {
+                          taskService.markTaskComplete(id);
+                          refetch();
+                          toast.success('Task marked as completed');
+                        }
+                      }}
+                      disabled={task.status === 'completed'}
+                    >
+                      {task.status === 'completed' ? 'Task Completed' : 'Mark as Complete'}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -435,9 +480,15 @@ const ProjectDetail = () => {
                   <p className="text-muted-foreground mb-6">
                     There are no candidate responses for this task yet.
                   </p>
-                  <Button onClick={() => setActiveTab("submit")}>
-                    Submit a Response
-                  </Button>
+                  <div className="flex gap-4 justify-center">
+                    <Button onClick={() => setActiveTab("submit")}>
+                      Submit a Test Response
+                    </Button>
+                    <Button variant="outline" onClick={handleCopyLink}>
+                      <Link2 className="mr-2 h-4 w-4" />
+                      Copy Candidate Link
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ) : (

@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import GenerateTask from "./pages/GenerateTask";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
+import CandidateSubmission from "./pages/CandidateSubmission";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/generate" element={<GenerateTask />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
+          <Route path="/tasks/:id/submit" element={<CandidateSubmission />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
