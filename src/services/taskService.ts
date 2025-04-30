@@ -1,8 +1,9 @@
 
 import { Task, BrandDefinition, TaskResponse, AiAnalysis, DashboardStats, TaskSection } from '../types';
 
-// Empty initial state - no mock tasks
-const tasks: Task[] = [];
+// Task storage to maintain tasks in memory during the session
+// This is the main issue - tasks were not being stored persistently
+let tasks: Task[] = [];
 
 // Statistics will be calculated from the actual tasks
 const getDashboardStats = (): DashboardStats => {
@@ -138,6 +139,7 @@ export const taskService = {
         }))
       };
       
+      // Add the new task to the beginning of the array
       tasks.unshift(newTask);
       return newTask;
     } catch (error) {
