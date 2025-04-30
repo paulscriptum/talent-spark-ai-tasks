@@ -48,6 +48,32 @@ const mockTasks: Task[] = [
           summary: 'A technically sound proposal with good channel diversity but could improve on emotional connection and alignment with brand values.',
         }
       }
+    ],
+    sections: [
+      {
+        id: 'req-1',
+        title: 'Marketing Strategy Requirements',
+        content: 'The marketing strategy should include digital and traditional channels, with a focus on sustainability messaging.',
+        type: 'requirements'
+      },
+      {
+        id: 'del-1',
+        title: 'Expected Deliverables',
+        content: 'Complete marketing plan with budget allocation, channel strategy, and timeline for implementation.',
+        type: 'deliverables'
+      },
+      {
+        id: 'eval-1',
+        title: 'Evaluation Points',
+        content: 'Proposals will be evaluated based on creativity, alignment with brand values, and potential ROI.',
+        type: 'evaluation'
+      },
+      {
+        id: 'note-1',
+        title: 'Additional Notes',
+        content: 'Please consider our previous campaign results when creating your strategy.',
+        type: 'note'
+      }
     ]
   },
   {
@@ -64,7 +90,27 @@ const mockTasks: Task[] = [
       companyValues: ['Simplicity', 'Efficiency', 'User-centered'],
       tone: 'Friendly and minimalist',
     },
-    responses: []
+    responses: [],
+    sections: [
+      {
+        id: 'req-2',
+        title: 'Design Requirements',
+        content: 'The interface should be clean, minimalist, and focused on user efficiency.',
+        type: 'requirements'
+      },
+      {
+        id: 'del-2',
+        title: 'Expected Deliverables',
+        content: 'UI mockups in Figma, user flow diagrams, and a brief explanation of design decisions.',
+        type: 'deliverables'
+      },
+      {
+        id: 'eval-2',
+        title: 'Evaluation Criteria',
+        content: 'Designs will be judged on usability, aesthetic appeal, and alignment with our brand identity.',
+        type: 'evaluation'
+      }
+    ]
   }
 ];
 
@@ -130,5 +176,21 @@ export const taskService = {
     }
     
     return mockAnalysis;
+  },
+
+  // Add the missing updateTaskSection method
+  updateTaskSection: async (taskId: string, sectionId: string, content: string): Promise<void> => {
+    const taskIndex = mockTasks.findIndex(task => task.id === taskId);
+    if (taskIndex === -1) return;
+
+    const task = mockTasks[taskIndex];
+    if (!task.sections) {
+      task.sections = [];
+    }
+
+    const sectionIndex = task.sections.findIndex(section => section.id === sectionId);
+    if (sectionIndex === -1) return;
+
+    task.sections[sectionIndex].content = content;
   }
 };
