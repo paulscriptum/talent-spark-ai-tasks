@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -14,16 +15,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { TaskResponse } from '../types';
-import { ArrowLeft, Clock, Check, FileText, Link2, AlertCircle, Info } from 'lucide-react';
+import { TaskResponse, TaskSection } from '../types';
+import { ArrowLeft, Clock, Check, FileText, PenLine, Link2, AlertCircle, Info } from 'lucide-react';
+import { Form, FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [newResponse, setNewResponse] = useState({ candidateName: '', responseContent: '' });
   const [activeTab, setActiveTab] = useState("details");
+  const [editingSection, setEditingSection] = useState<string | null>(null);
   
-  const { data: task, isLoading } = useQuery({
+  const { data: task, isLoading, refetch } = useQuery({
     queryKey: ['task', id],
     queryFn: () => taskService.getTaskById(id || ''),
     enabled: !!id,
@@ -44,9 +48,24 @@ const ProjectDetail = () => {
     onSuccess: () => {
       toast.success('Response submitted and analyzed!');
       setNewResponse({ candidateName: '', responseContent: '' });
+      refetch();
     },
     onError: () => {
       toast.error('Failed to submit response. Please try again.');
+    }
+  });
+
+  const updateSectionMutation = useMutation({
+    mutationFn: (data: { taskId: string, sectionId: string, content: string }) => {
+      return taskService.updateTaskSection(data.taskId, data.sectionId, data.content);
+    },
+    onSuccess: () => {
+      toast.success('Section updated successfully!');
+      refetch();
+      setEditingSection(null);
+    },
+    onError: () => {
+      toast.error('Failed to update section. Please try again.');
     }
   });
 
@@ -62,133 +81,120 @@ const ProjectDetail = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
   };
-
-  // Helper function to parse and structure task sections
-  const parseTaskSections = (description: string) => {
-    // Split the description into sections based on headings
-    const sections = [];
-    
-    // First, split by double newlines to identify potential section breaks
-    const blocks = description.split(/\n\n+/);
-    
-    let currentSection = {
-      title: 'Overview',
-      content: [],
-      type: 'text'
-    };
-    
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i].trim();
-      
-      // Skip empty blocks
-      if (!block) continue;
-      
-      // Check if this block looks like a header (all caps, ends with a colon, etc.)
-      const isHeader = /^[A-Z][A-Z\s&:]+$/.test(block) || 
-                       block.includes(':') && block.split(':')[0].toUpperCase() === block.split(':')[0];
-      
-      if (isHeader) {
-        // If we have content in the current section, save it
-        if (currentSection.content.length > 0) {
-          sections.push({...currentSection});
-        }
-        
-        // Start a new section
-        const title = block.replace(/:$/, '');
-        
-        // Determine section type based on keywords
-        let type = 'text';
-        if (title.toLowerCase().includes('time') || title.toLowerCase().includes('deadline') || 
-            title.toLowerCase().includes('limit')) {
-          type = 'time';
-        } else if (title.toLowerCase().includes('note')) {
-          type = 'note';
-        } else if (title.toLowerCase().includes('requirement') || title.toLowerCase().includes('objective')) {
-          type = 'requirements';
-        } else if (title.toLowerCase().includes('deliverable')) {
-          type = 'deliverables';
-        } else if (title.toLowerCase().includes('evaluation') || title.toLowerCase().includes('criteria')) {
-          type = 'evaluation';
-        } else if (title.toLowerCase().includes('submission') || title.toLowerCase().includes('instruction')) {
-          type = 'instructions';
-        }
-        
-        currentSection = {
-          title,
-          content: [],
-          type
-        };
-      } else {
-        // Add this block to the current section
-        currentSection.content.push(block);
-      }
-    }
-    
-    // Add the last section if it has content
-    if (currentSection.content.length > 0) {
-      sections.push(currentSection);
-    }
-    
-    return sections;
+  
+  const handleSectionEdit = (sectionId: string, content: string) => {
+    if (!id) return;
+    updateSectionMutation.mutate({ taskId: id, sectionId, content });
   };
 
-  // Format content based on section type
-  const renderSectionContent = (section) => {
-    switch(section.type) {
-      case 'time':
-        return (
-          <div className="task-time-block">
-            <Clock className="text-primary h-5 w-5" />
-            <div>{section.content.join(' ')}</div>
-          </div>
-        );
-      
-      case 'note':
-        return (
-          <div className="task-note-block">
-            <div className="flex gap-2 items-center mb-2">
-              <Info className="text-primary h-4 w-4" />
-              <span className="font-semibold">Note:</span>
-            </div>
-            <div>{section.content.join(' ')}</div>
-          </div>
-        );
-      
-      case 'requirements':
-      case 'deliverables':
-      case 'evaluation':
-      case 'instructions':
-        // Parse bullet points if content starts with bullets
-        const hasBullets = section.content.some(line => line.trim().startsWith('•') || 
-                                                        line.trim().startsWith('-') || 
-                                                        line.trim().startsWith('*'));
-        
-        if (hasBullets) {
-          return (
-            <div className="space-y-3">
-              {section.content.map((item, i) => {
-                const cleanItem = item.trim().replace(/^[•\-*]\s*/, '');
-                return cleanItem ? (
-                  <div key={i} className="task-list-item">
-                    <div>{cleanItem}</div>
-                  </div>
-                ) : null;
-              })}
-            </div>
-          );
+  // Render different section types
+  const renderSectionContent = (section: TaskSection) => {
+    const isEditing = editingSection === section.id;
+
+    const getIconForSection = () => {
+      switch(section.type) {
+        case 'requirements':
+          return <Check className="text-primary h-5 w-5" />;
+        case 'deliverables':
+          return <FileText className="text-primary h-5 w-5" />;
+        case 'evaluation':
+          return <AlertCircle className="text-primary h-5 w-5" />;
+        case 'time':
+          return <Clock className="text-primary h-5 w-5" />;
+        case 'note':
+          return <Info className="text-primary h-5 w-5" />;
+        default:
+          return null;
+      }
+    };
+    
+    const getClassForSection = () => {
+      switch(section.type) {
+        case 'requirements':
+          return 'task-requirements-block';
+        case 'deliverables':
+          return 'task-deliverables-block';
+        case 'evaluation':
+          return 'task-evaluation-block';
+        case 'time':
+          return 'task-time-block';
+        case 'note':
+          return 'task-note-block';
+        default:
+          return 'task-content-block';
+      }
+    };
+
+    if (isEditing) {
+      const form = useForm({
+        defaultValues: {
+          content: section.content
         }
-        
-        // Fall through to default case if no bullets detected
+      });
       
-      default:
-        return (
-          <div className="space-y-4">
-            {section.content.map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
-            ))}
-          </div>
-        );
+      return (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit((data) => handleSectionEdit(section.id, data.content))}>
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea 
+                      {...field} 
+                      className="min-h-[150px] bg-black/30"
+                      autoFocus
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setEditingSection(null)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                size="sm"
+                disabled={updateSectionMutation.isPending}
+              >
+                {updateSectionMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      );
     }
+    
+    const sectionClass = getClassForSection();
+    const icon = getIconForSection();
+
+    return (
+      <div className={sectionClass}>
+        {icon && <div className="flex gap-2 items-center mb-2">{icon} <span className="font-semibold">{section.title}</span></div>}
+        {!icon && <div className="font-semibold mb-2">{section.title}</div>}
+        
+        <div className="whitespace-pre-wrap">{section.content}</div>
+        
+        <div className="flex justify-end mt-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => setEditingSection(section.id)}
+          >
+            <PenLine className="h-3.5 w-3.5 mr-1" />
+            Edit
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -213,8 +219,6 @@ const ProjectDetail = () => {
       </Layout>
     );
   }
-
-  const taskSections = parseTaskSections(task.description);
 
   return (
     <Layout>
@@ -276,24 +280,82 @@ const ProjectDetail = () => {
               {/* Task Content Card */}
               <Card className="glass-card">
                 <CardHeader className="glass-header">
-                  <CardTitle>Task Content</CardTitle>
+                  <CardTitle>Task Description</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  {taskSections.map((section, idx) => (
-                    <div key={idx} className="task-content-section">
-                      <div className="task-content-card">
-                        <div className="task-content-header">
-                          <h2>{section.title}</h2>
-                        </div>
-                        <div className="task-content-body">
-                          {renderSectionContent(section)}
-                        </div>
-                      </div>
-                      {idx < taskSections.length - 1 && idx % 3 === 2 && (
-                        <Separator className="my-6 opacity-20" />
-                      )}
+                  <div className="p-6">
+                    <div className="task-content-block mb-6">
+                      {task.description}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Requirements Section Card */}
+              <Card className="glass-card">
+                <CardHeader className="glass-header">
+                  <CardTitle className="text-xl">Requirements</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {task.sections?.filter(section => section.type === 'requirements').map((section) => (
+                    <div key={section.id} className="mb-6 last:mb-0">
+                      {renderSectionContent(section)}
                     </div>
                   ))}
+                  {(!task.sections || task.sections.filter(s => s.type === 'requirements').length === 0) && (
+                    <div className="text-muted-foreground italic">No requirements defined yet. Click Edit to add.</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Deliverables Section Card */}
+              <Card className="glass-card">
+                <CardHeader className="glass-header">
+                  <CardTitle className="text-xl">Deliverables</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {task.sections?.filter(section => section.type === 'deliverables').map((section) => (
+                    <div key={section.id} className="mb-6 last:mb-0">
+                      {renderSectionContent(section)}
+                    </div>
+                  ))}
+                  {(!task.sections || task.sections.filter(s => s.type === 'deliverables').length === 0) && (
+                    <div className="text-muted-foreground italic">No deliverables defined yet. Click Edit to add.</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Evaluation Criteria Card */}
+              <Card className="glass-card">
+                <CardHeader className="glass-header">
+                  <CardTitle className="text-xl">Evaluation Criteria</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {task.sections?.filter(section => section.type === 'evaluation').map((section) => (
+                    <div key={section.id} className="mb-6 last:mb-0">
+                      {renderSectionContent(section)}
+                    </div>
+                  ))}
+                  {(!task.sections || task.sections.filter(s => s.type === 'evaluation').length === 0) && (
+                    <div className="text-muted-foreground italic">No evaluation criteria defined yet. Click Edit to add.</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Notes Card */}
+              <Card className="glass-card">
+                <CardHeader className="glass-header">
+                  <CardTitle className="text-xl">Notes</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {task.sections?.filter(section => section.type === 'note').map((section) => (
+                    <div key={section.id} className="mb-6 last:mb-0">
+                      {renderSectionContent(section)}
+                    </div>
+                  ))}
+                  {(!task.sections || task.sections.filter(s => s.type === 'note').length === 0) && (
+                    <div className="text-muted-foreground italic">No notes defined yet. Click Edit to add.</div>
+                  )}
                 </CardContent>
               </Card>
             </div>

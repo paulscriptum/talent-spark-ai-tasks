@@ -124,6 +124,23 @@ body {
   @apply p-5;
 }
 
+/* New task section block styles */
+.task-content-block {
+  @apply bg-black/40 backdrop-blur-sm p-5 rounded-lg border border-white/10;
+}
+
+.task-requirements-block {
+  @apply bg-blue-950/30 backdrop-blur-sm p-5 rounded-lg border border-blue-500/20;
+}
+
+.task-deliverables-block {
+  @apply bg-green-950/30 backdrop-blur-sm p-5 rounded-lg border border-green-500/20;
+}
+
+.task-evaluation-block {
+  @apply bg-purple-950/30 backdrop-blur-sm p-5 rounded-lg border border-purple-500/20;
+}
+
 .task-time-block {
   @apply bg-black/60 backdrop-blur-md p-4 rounded-lg border border-white/10 my-4 flex items-center gap-2;
 }
@@ -138,7 +155,7 @@ body {
 }
 
 .task-note-block {
-  @apply bg-black/60 backdrop-blur-md p-4 rounded-lg border border-white/10 my-4 italic;
+  @apply bg-amber-950/20 backdrop-blur-md p-4 rounded-lg border border-amber-500/20 my-4;
 }
 
 /* Dark scrollbar */

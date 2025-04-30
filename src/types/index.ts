@@ -8,6 +8,14 @@ export interface Task {
   deadline?: string;
   brandDefinition: BrandDefinition;
   responses: TaskResponse[];
+  sections?: TaskSection[];
+}
+
+export interface TaskSection {
+  id: string;
+  title: string;
+  content: string;
+  type: 'requirements' | 'deliverables' | 'evaluation' | 'time' | 'note' | 'text';
 }
 
 export interface BrandDefinition {
