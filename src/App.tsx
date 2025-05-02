@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ClerkProvider, SignIn, SignUp, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { ClerkProvider, SignIn, SignUp, SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
 import Dashboard from "./pages/Dashboard";
 import GenerateTask from "./pages/GenerateTask";
 import Projects from "./pages/Projects";
@@ -33,14 +33,21 @@ const App = () => {
   
   // Add error handling and fallback UI
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   
   useEffect(() => {
-    // Simulate checking if everything is loaded
-    const timer = setTimeout(() => {
+    try {
+      // Simulate checking if everything is loaded
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    } catch (error) {
+      console.error("Error initializing app:", error);
+      setHasError(true);
       setIsLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
+    }
   }, []);
   
   // Show loading state
@@ -49,6 +56,18 @@ const App = () => {
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center">
           <p className="text-lg">Loading application...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (hasError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <div className="max-w-md p-6 text-center">
+          <h1 className="text-xl font-bold mb-4">Application Error</h1>
+          <p className="mb-4">Something went wrong. Please try refreshing the page.</p>
         </div>
       </div>
     );
@@ -79,7 +98,19 @@ const App = () => {
                 path="/sign-in/*"
                 element={
                   <AuthLayout>
-                    <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />
+                    <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" appearance={{
+                      elements: {
+                        formButtonPrimary: "bg-primary hover:bg-primary/90 text-white",
+                        card: "bg-transparent",
+                        headerTitle: "text-white",
+                        headerSubtitle: "text-gray-400",
+                        socialButtonsBlockButton: "bg-secondary border-gray-800 hover:bg-secondary/80 text-foreground",
+                        dividerText: "text-gray-500",
+                        formFieldLabel: "text-gray-300",
+                        formFieldInput: "bg-secondary/50 border-gray-800 text-white",
+                        footerActionLink: "text-primary hover:text-primary/80"
+                      }
+                    }} />
                   </AuthLayout>
                 }
               />
@@ -87,7 +118,19 @@ const App = () => {
                 path="/sign-up/*"
                 element={
                   <AuthLayout>
-                    <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
+                    <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" appearance={{
+                      elements: {
+                        formButtonPrimary: "bg-primary hover:bg-primary/90 text-white",
+                        card: "bg-transparent",
+                        headerTitle: "text-white",
+                        headerSubtitle: "text-gray-400",
+                        socialButtonsBlockButton: "bg-secondary border-gray-800 hover:bg-secondary/80 text-foreground",
+                        dividerText: "text-gray-500",
+                        formFieldLabel: "text-gray-300",
+                        formFieldInput: "bg-secondary/50 border-gray-800 text-white",
+                        footerActionLink: "text-primary hover:text-primary/80"
+                      }
+                    }} />
                   </AuthLayout>
                 }
               />

@@ -14,8 +14,9 @@ const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="w-full bg-black/40 border border-gray-800 p-6 rounded-lg backdrop-blur-lg">
           {children || (
             <div className="text-center p-4">
-              <p>Authentication component failed to load.</p>
-              <Link to="/" className="text-primary hover:underline mt-2 block">
+              <p>Sign in component could not be loaded.</p>
+              <p className="mt-2 text-sm text-gray-400">Try refreshing the page.</p>
+              <Link to="/" className="text-primary hover:underline mt-4 block">
                 Return to Home
               </Link>
             </div>
