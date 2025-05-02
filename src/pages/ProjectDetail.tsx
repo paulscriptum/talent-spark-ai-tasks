@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -192,6 +191,7 @@ const ProjectDetail = () => {
         
         <div className="whitespace-pre-wrap">{section.content}</div>
         
+        {/* Edit button for all sections */}
         <div className="flex justify-end mt-4">
           <Button 
             variant="ghost" 
@@ -262,7 +262,7 @@ const ProjectDetail = () => {
         <TabsList className="mb-6">
           <TabsTrigger value="details">Task Details</TabsTrigger>
           <TabsTrigger value="responses">
-            Responses ({task.responses.length})
+            Responses ({task?.responses.length || 0})
           </TabsTrigger>
           <TabsTrigger value="submit">Submit Response</TabsTrigger>
         </TabsList>
@@ -447,7 +447,7 @@ const ProjectDetail = () => {
                   )}
                   <div className="content-block">
                     <h4 className="text-sm font-medium text-primary mb-1">Responses</h4>
-                    <p>{task.responses.length}</p>
+                    <p>{task?.responses.length || 0}</p>
                   </div>
                   <div className="flex justify-end mt-6">
                     <Button 

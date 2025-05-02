@@ -1,8 +1,35 @@
 
 import { Task, BrandDefinition, TaskResponse, AiAnalysis, DashboardStats, TaskSection } from '../types';
 
-// Empty initial state - no mock tasks
-const tasks: Task[] = [];
+// Local storage key for tasks
+const TASKS_STORAGE_KEY = 'assessment_tasks';
+
+// Load tasks from localStorage or use empty array if not found
+let tasks: Task[] = loadTasks();
+
+// Function to load tasks from localStorage
+function loadTasks(): Task[] {
+  if (typeof window === 'undefined') return [];
+  
+  try {
+    const storedTasks = localStorage.getItem(TASKS_STORAGE_KEY);
+    return storedTasks ? JSON.parse(storedTasks) : [];
+  } catch (error) {
+    console.error('Error loading tasks from localStorage:', error);
+    return [];
+  }
+}
+
+// Function to save tasks to localStorage
+function saveTasks() {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+  } catch (error) {
+    console.error('Error saving tasks to localStorage:', error);
+  }
+}
 
 // Statistics will be calculated from the actual tasks
 const getDashboardStats = (): DashboardStats => {
@@ -139,6 +166,8 @@ export const taskService = {
       };
       
       tasks.unshift(newTask);
+      // Save tasks to localStorage after adding a new one
+      saveTasks();
       return newTask;
     } catch (error) {
       console.error('Error generating task:', error);
@@ -175,6 +204,8 @@ export const taskService = {
       };
       
       tasks.unshift(newTask);
+      // Save tasks to localStorage after adding a new one
+      saveTasks();
       return newTask;
     }
   },
@@ -195,6 +226,8 @@ export const taskService = {
     
     // Add the response to the task
     task.responses.push(newResponse);
+    // Save tasks to localStorage after adding a response
+    saveTasks();
     
     return newResponse;
   },
@@ -280,6 +313,8 @@ export const taskService = {
     if (sectionIndex === -1) return;
 
     task.sections[sectionIndex].content = content;
+    // Save tasks to localStorage after updating a section
+    saveTasks();
   },
   
   markTaskComplete: async (taskId: string): Promise<void> => {
@@ -287,5 +322,7 @@ export const taskService = {
     if (taskIndex === -1) return;
 
     tasks[taskIndex].status = 'completed';
+    // Save tasks to localStorage after marking a task as complete
+    saveTasks();
   }
 };

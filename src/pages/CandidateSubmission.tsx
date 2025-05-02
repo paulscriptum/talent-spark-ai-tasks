@@ -1,268 +1,212 @@
 
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useParams, Link } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { taskService } from '../services/taskService';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Form, FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { TaskSection } from '../types';
-
-const formSchema = z.object({
-  candidateName: z.string().min(2, { message: 'Please enter your name' }),
-  responseContent: z.string().min(10, { message: 'Please provide a more detailed response' })
-});
+import { ArrowLeft, Send } from 'lucide-react';
+import { format } from 'date-fns';
+import { TaskResponse } from '@/types';
 
 const CandidateSubmission = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [candidateName, setCandidateName] = useState('');
+  const [responseContent, setResponseContent] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
   
   const { data: task, isLoading, error } = useQuery({
-    queryKey: ['task-candidate', id],
+    queryKey: ['task-for-candidate', id],
     queryFn: () => taskService.getTaskByIdForCandidate(id || ''),
     enabled: !!id,
+    retry: 3, // Retry 3 times if task is not found initially
   });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      candidateName: '',
-      responseContent: ''
-    }
-  });
-
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    if (!id) return;
-    
-    try {
-      setIsSubmitting(true);
-      
-      await taskService.submitResponse(id, {
-        candidateName: data.candidateName,
-        responseContent: data.responseContent
-      });
-      
-      toast.success('Your response has been submitted successfully!');
-      setSubmitted(true);
-      
-    } catch (error) {
-      console.error('Error submitting response:', error);
+  
+  const submitMutation = useMutation({
+    mutationFn: (data: Omit<TaskResponse, 'id' | 'submittedAt' | 'aiAnalysis'>) => {
+      if (!id) throw new Error('Task ID is required');
+      return taskService.submitResponse(id, data);
+    },
+    onSuccess: () => {
+      toast.success('Your response was submitted successfully!');
+      setIsSubmitted(true);
+    },
+    onError: () => {
       toast.error('Failed to submit your response. Please try again.');
-    } finally {
-      setIsSubmitting(false);
     }
-  };
-
-  // Render section content
-  const renderSectionContent = (section: TaskSection) => {
-    const getIconClass = () => {
-      switch(section.type) {
-        case 'requirements':
-          return 'task-requirements-block';
-        case 'deliverables':
-          return 'task-deliverables-block';
-        case 'evaluation':
-          return 'task-evaluation-block';
-        case 'note':
-          return 'task-note-block';
-        default:
-          return 'task-content-block';
-      }
-    };
+  });
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    return (
-      <div className={getIconClass()}>
-        <div className="font-semibold mb-2">{section.title}</div>
-        <div className="whitespace-pre-wrap">{section.content}</div>
-      </div>
-    );
+    if (!candidateName.trim()) {
+      toast.error('Please enter your name');
+      return;
+    }
+    
+    if (!responseContent.trim()) {
+      toast.error('Please enter your response');
+      return;
+    }
+    
+    submitMutation.mutate({ candidateName, responseContent });
   };
-
+  
   if (isLoading) {
     return (
-      <div className="container max-w-4xl mx-auto py-10 px-4">
-        <Card className="glass-card">
-          <CardContent className="pt-6">
-            <div className="flex justify-center items-center p-10">
-              <p>Loading task details...</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Loading task details...</p>
       </div>
     );
   }
-
-  if (error || !task) {
+  
+  if (!task) {
     return (
-      <div className="container max-w-4xl mx-auto py-10 px-4">
-        <Card className="glass-card">
-          <CardContent className="pt-6">
-            <div className="flex flex-col justify-center items-center p-10">
-              <h2 className="text-2xl font-bold mb-4">Task not found</h2>
-              <p className="text-muted-foreground mb-6">The task you are looking for doesn't exist or has expired.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (submitted) {
-    return (
-      <div className="container max-w-4xl mx-auto py-10 px-4">
-        <Card className="glass-card">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <Card className="max-w-lg w-full">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Thank You!</CardTitle>
-            <CardDescription className="text-center">
-              Your response has been submitted successfully
-            </CardDescription>
+            <CardTitle className="text-xl text-center">Task Not Found</CardTitle>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="flex flex-col justify-center items-center p-10">
-              <p className="text-center mb-6">
-                Your submission has been received and will be reviewed by the recruitment team.
-                Thank you for taking the time to complete this assessment task.
-              </p>
-            </div>
+          <CardContent className="text-center">
+            <p className="mb-6">
+              The task you're looking for may have been removed or the link is incorrect.
+            </p>
+            <Link to="/">
+              <Button>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Return to Home
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
     );
   }
 
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <Card className="max-w-lg w-full">
+          <CardHeader>
+            <CardTitle className="text-xl text-center">Submission Successful</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="mb-6">
+              Thank you for your submission. Your response has been recorded.
+            </p>
+            <Link to="/">
+              <Button>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Return to Home
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
   return (
-    <div className="container max-w-4xl mx-auto py-10 px-4">
-      <Card className="glass-card mb-6">
-        <CardHeader>
-          <CardTitle className="text-2xl">{task.title}</CardTitle>
-          <CardDescription>
-            Assessment Task for {task.brandDefinition.companyName}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="task-content-block">
-              {task.description}
-            </div>
-
-            {task.sections?.filter(section => section.type === 'requirements').map((section) => (
-              <div key={section.id}>
-                {renderSectionContent(section)}
-              </div>
-            ))}
-
-            {task.sections?.filter(section => section.type === 'deliverables').map((section) => (
-              <div key={section.id}>
-                {renderSectionContent(section)}
-              </div>
-            ))}
-
-            {task.sections?.filter(section => section.type === 'evaluation').map((section) => (
-              <div key={section.id}>
-                {renderSectionContent(section)}
-              </div>
-            ))}
-
-            {task.sections?.filter(section => section.type === 'note').map((section) => (
-              <div key={section.id}>
-                {renderSectionContent(section)}
-              </div>
-            ))}
-
-            <div className="content-block">
-              <h3 className="font-semibold mb-2">Company Information</h3>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <div className="text-sm font-medium text-primary mb-1">Company</div>
-                  <p className="text-sm">{task.brandDefinition.companyName}</p>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">{task.title}</h1>
+          <p className="text-muted-foreground mt-1">
+            {task.brandDefinition.companyName} • Deadline: {format(new Date(task.deadline || ''), 'PPP')}
+          </p>
+        </div>
+        
+        <Card className="glass-card">
+          <CardHeader className="glass-header">
+            <CardTitle className="text-xl">Task Description</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="whitespace-pre-wrap">{task.description}</p>
+          </CardContent>
+        </Card>
+        
+        {task.sections?.filter(section => section.type === 'requirements').length > 0 && (
+          <Card className="glass-card">
+            <CardHeader className="glass-header">
+              <CardTitle className="text-xl">Requirements</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {task.sections?.filter(section => section.type === 'requirements').map((section) => (
+                <div key={section.id} className="mb-4 last:mb-0">
+                  <h3 className="font-semibold mb-2">{section.title}</h3>
+                  <p className="whitespace-pre-wrap">{section.content}</p>
                 </div>
-                <div>
-                  <div className="text-sm font-medium text-primary mb-1">Industry</div>
-                  <p className="text-sm">{task.brandDefinition.industry}</p>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+        
+        {task.sections?.filter(section => section.type === 'deliverables').length > 0 && (
+          <Card className="glass-card">
+            <CardHeader className="glass-header">
+              <CardTitle className="text-xl">Deliverables</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {task.sections?.filter(section => section.type === 'deliverables').map((section) => (
+                <div key={section.id} className="mb-4 last:mb-0">
+                  <h3 className="font-semibold mb-2">{section.title}</h3>
+                  <p className="whitespace-pre-wrap">{section.content}</p>
                 </div>
-                <div>
-                  <div className="text-sm font-medium text-primary mb-1">Target Audience</div>
-                  <p className="text-sm">{task.brandDefinition.targetAudience}</p>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-primary mb-1">Brand Values</div>
-                  <p className="text-sm">{task.brandDefinition.companyValues.join(', ')}</p>
-                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+        
+        <Card className="glass-card">
+          <CardHeader className="glass-header">
+            <CardTitle>Submit Your Response</CardTitle>
+            <CardDescription>Complete the form below to submit your response to this task</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="candidateName">Your Name</Label>
+                <Input 
+                  id="candidateName"
+                  value={candidateName}
+                  onChange={(e) => setCandidateName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="bg-black/30"
+                />
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle>Submit Your Response</CardTitle>
-          <CardDescription>
-            Please fill out the form below to submit your response to this task
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="candidateName"
-                render={({ field }) => (
-                  <FormItem>
-                    <Label htmlFor="candidateName">Your Name</Label>
-                    <FormControl>
-                      <Input 
-                        id="candidateName"
-                        placeholder="Enter your full name"
-                        className="bg-black/30"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="responseContent"
-                render={({ field }) => (
-                  <FormItem>
-                    <Label htmlFor="responseContent">Your Response</Label>
-                    <FormControl>
-                      <Textarea 
-                        id="responseContent"
-                        placeholder="Enter your response to the task..."
-                        rows={15}
-                        className="bg-black/30"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+              
+              <div>
+                <Label htmlFor="responseContent">Your Response</Label>
+                <Textarea
+                  id="responseContent"
+                  value={responseContent}
+                  onChange={(e) => setResponseContent(e.target.value)}
+                  placeholder="Enter your response to this task..."
+                  rows={10}
+                  className="bg-black/30"
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-end">
               <Button 
                 type="submit" 
-                className="w-full"
-                disabled={isSubmitting}
+                disabled={submitMutation.isPending}
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Response'}
+                {submitMutation.isPending ? (
+                  'Submitting...'
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Submit Response
+                  </>
+                )}
               </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 };
