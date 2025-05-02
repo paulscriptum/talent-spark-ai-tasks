@@ -317,6 +317,16 @@ export const taskService = {
     saveTasks();
   },
   
+  // Add the new updateTaskDescription function
+  updateTaskDescription: async (taskId: string, description: string): Promise<void> => {
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+    if (taskIndex === -1) return;
+
+    tasks[taskIndex].description = description;
+    // Save tasks to localStorage after updating the description
+    saveTasks();
+  },
+  
   markTaskComplete: async (taskId: string): Promise<void> => {
     const taskIndex = tasks.findIndex(task => task.id === taskId);
     if (taskIndex === -1) return;
