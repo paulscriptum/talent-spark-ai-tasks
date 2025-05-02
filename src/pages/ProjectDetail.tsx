@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -25,6 +26,7 @@ const ProjectDetail = () => {
   const [newResponse, setNewResponse] = useState({ candidateName: '', responseContent: '' });
   const [activeTab, setActiveTab] = useState("details");
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [editingDescription, setEditingDescription] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const shareLinkRef = useRef<HTMLDivElement>(null);
   
@@ -64,6 +66,20 @@ const ProjectDetail = () => {
     }
   });
 
+  const updateDescriptionMutation = useMutation({
+    mutationFn: (data: { taskId: string, description: string }) => {
+      return taskService.updateTaskDescription(data.taskId, data.description);
+    },
+    onSuccess: () => {
+      toast.success('Description updated successfully!');
+      refetch();
+      setEditingDescription(false);
+    },
+    onError: () => {
+      toast.error('Failed to update description. Please try again.');
+    }
+  });
+
   const handleSubmitResponse = () => {
     if (!newResponse.candidateName.trim() || !newResponse.responseContent.trim()) {
       toast.error('Please fill in all fields');
@@ -80,6 +96,11 @@ const ProjectDetail = () => {
   const handleSectionEdit = (sectionId: string, content: string) => {
     if (!id) return;
     updateSectionMutation.mutate({ taskId: id, sectionId, content });
+  };
+
+  const handleDescriptionEdit = (description: string) => {
+    if (!id || !task) return;
+    updateDescriptionMutation.mutate({ taskId: id, description });
   };
 
   const handleCopyLink = () => {
@@ -313,9 +334,65 @@ const ProjectDetail = () => {
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="p-6">
-                    <div className="task-content-block mb-6">
-                      {task.description}
-                    </div>
+                    {editingDescription ? (
+                      <div>
+                        <Form {...useForm({
+                          defaultValues: {
+                            description: task.description
+                          }
+                        })}>
+                          <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const formData = new FormData(e.currentTarget);
+                            const description = formData.get('description') as string;
+                            handleDescriptionEdit(description);
+                          }}>
+                            <FormItem>
+                              <FormControl>
+                                <Textarea 
+                                  name="description"
+                                  className="min-h-[150px] bg-black/30"
+                                  defaultValue={task.description}
+                                  autoFocus
+                                />
+                              </FormControl>
+                            </FormItem>
+                            <div className="flex justify-end gap-2 mt-4">
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setEditingDescription(false)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button 
+                                type="submit" 
+                                size="sm"
+                                disabled={updateDescriptionMutation.isPending}
+                              >
+                                {updateDescriptionMutation.isPending ? 'Saving...' : 'Save Changes'}
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
+                      </div>
+                    ) : (
+                      <div className="task-content-block mb-6">
+                        {task.description}
+                        <div className="flex justify-end mt-4">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-muted-foreground hover:text-foreground"
+                            onClick={() => setEditingDescription(true)}
+                          >
+                            <PenLine className="h-3.5 w-3.5 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
