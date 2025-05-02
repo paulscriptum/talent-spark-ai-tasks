@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -88,7 +87,7 @@ const ProjectDetail = () => {
     
     submitResponseMutation.mutate(newResponse);
   };
-
+  
   const handleTabChange = (value: string) => {
     setActiveTab(value);
   };
