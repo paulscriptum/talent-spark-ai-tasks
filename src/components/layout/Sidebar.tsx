@@ -5,11 +5,15 @@ import { cn } from '@/lib/utils';
 import { 
   FileText, 
   ClipboardCheck, 
-  BarChart, 
+  BarChart,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
 const Sidebar = () => {
   const location = useLocation();
+  const { logout, user } = useAuth();
 
   const navigationItems = [
     {
@@ -66,7 +70,23 @@ const Sidebar = () => {
       </nav>
 
       <div className="mt-auto pt-4 border-t border-border">
-        <div className="px-3 py-2 text-xs text-muted-foreground">
+        {user && (
+          <div className="px-3 py-2 mb-4">
+            <div className="font-medium">{user.name}</div>
+            <div className="text-xs text-muted-foreground">{user.email}</div>
+          </div>
+        )}
+        
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start text-muted-foreground hover:text-foreground"
+          onClick={logout}
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
+
+        <div className="px-3 py-2 text-xs text-muted-foreground mt-4">
           TalentSpark AI © 2025
         </div>
       </div>
