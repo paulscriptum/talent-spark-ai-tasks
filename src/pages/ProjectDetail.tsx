@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -96,7 +97,7 @@ const ProjectDetail = () => {
       });
   };
 
-  // Fixed task section rendering with proper edit button for all section types
+  // Render different section types
   const renderSectionContent = (section: TaskSection) => {
     const isEditing = editingSection === section.id;
 
@@ -117,6 +118,23 @@ const ProjectDetail = () => {
       }
     };
     
+    const getClassForSection = () => {
+      switch(section.type) {
+        case 'requirements':
+          return 'task-requirements-block';
+        case 'deliverables':
+          return 'task-deliverables-block';
+        case 'evaluation':
+          return 'task-evaluation-block';
+        case 'time':
+          return 'task-time-block';
+        case 'note':
+          return 'task-note-block';
+        default:
+          return 'task-content-block';
+      }
+    };
+
     if (isEditing) {
       const form = useForm({
         defaultValues: {
@@ -164,16 +182,16 @@ const ProjectDetail = () => {
       );
     }
     
+    const sectionClass = getClassForSection();
     const icon = getIconForSection();
 
     return (
-      <div className="task-content-block">
+      <div className={sectionClass}>
         {icon && <div className="flex gap-2 items-center mb-2">{icon} <span className="font-semibold">{section.title}</span></div>}
         {!icon && <div className="font-semibold mb-2">{section.title}</div>}
         
         <div className="whitespace-pre-wrap">{section.content}</div>
         
-        {/* Added edit button for all section types - this was missing for some types */}
         <div className="flex justify-end mt-4">
           <Button 
             variant="ghost" 
@@ -212,7 +230,7 @@ const ProjectDetail = () => {
     );
   }
 
-  // Ensure the share link works by using the exact task ID
+  // Generate the share link
   const shareLink = `${window.location.origin}/tasks/${id}/submit`;
 
   return (
@@ -288,7 +306,7 @@ const ProjectDetail = () => {
                 </CardContent>
               </Card>
               
-              {/* Fixed task content rendering */}
+              {/* Task Content Card */}
               <Card className="glass-card">
                 <CardHeader className="glass-header">
                   <CardTitle>Task Description</CardTitle>
@@ -353,7 +371,7 @@ const ProjectDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Notes Card with proper edit buttons */}
+              {/* Notes Card */}
               <Card className="glass-card">
                 <CardHeader className="glass-header">
                   <CardTitle className="text-xl">Notes</CardTitle>
