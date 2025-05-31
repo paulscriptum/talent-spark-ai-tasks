@@ -1,4 +1,3 @@
-
 import { Task, BrandDefinition, TaskResponse, AiAnalysis, DashboardStats, TaskSection } from '../types';
 
 // Local storage key for tasks
@@ -63,17 +62,21 @@ const getDashboardStats = (): DashboardStats => {
 };
 
 // OpenAI API configuration
-const OPENAI_API_KEY = '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';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 // Helper function to make API calls to OpenAI
 const callOpenAI = async (messages: Array<{ role: string, content: string }>) => {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) {
+    console.error('OpenAI API key not found. Make sure VITE_OPENAI_API_KEY is set in your .env file.');
+    throw new Error('OpenAI API key not configured');
+  }
   try {
     const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: 'gpt-4o',
@@ -147,6 +150,17 @@ export const taskService = {
       const aiResponse = await callOpenAI(messages);
       const parsedResponse = JSON.parse(aiResponse);
       
+      // Ensure a "note" section exists
+      const hasNoteSection = parsedResponse.sections?.some((s: any) => s.type === 'note');
+      if (!hasNoteSection) {
+        if (!parsedResponse.sections) parsedResponse.sections = [];
+        parsedResponse.sections.push({
+          title: "Additional Notes", 
+          content: "Place additional notes here.", 
+          type: "note"
+        });
+      }
+
       // Create a new task with generated content
       const newTask: Task = {
         id: `task-${Date.now()}`,
@@ -199,6 +213,12 @@ export const taskService = {
             title: 'Evaluation Criteria',
             content: 'Submissions will be evaluated based on quality and alignment with requirements.',
             type: 'evaluation'
+          },
+          {
+            id: `section-${Date.now()}-4`,
+            title: 'Additional Notes',
+            content: 'Place additional notes here.',
+            type: 'note'
           }
         ]
       };
@@ -207,6 +227,65 @@ export const taskService = {
       // Save tasks to localStorage after adding a new one
       saveTasks();
       return newTask;
+    }
+  },
+
+  generateSectionContentWithAI: async (taskId: string, sectionId: string): Promise<TaskSection | null> => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || !task.brandDefinition || !task.sections) {
+      console.error('Task, brand definition, or sections not found for AI generation.');
+      return null;
+    }
+
+    const section = task.sections.find(s => s.id === sectionId);
+    if (!section) {
+      console.error('Section not found for AI generation.');
+      return null;
+    }
+
+    const sectionTypeUserFriendly = section.type.charAt(0).toUpperCase() + section.type.slice(1);
+
+    const messages = [
+      {
+        role: 'system',
+        content: `You are an expert in creating content for technical assessment tasks. Given the brand information and a specific section type (e.g., Requirements, Deliverables, Evaluation Criteria, Note), generate concise and relevant content for that section. Only return the text content for the section, not any titles or JSON structure.`
+      },
+      {
+        role: 'user',
+        content: `Generate the content for the "${sectionTypeUserFriendly}" section of an assessment task. 
+        The task is for a company with the following details:
+        Company Name: ${task.brandDefinition.companyName}
+        Industry: ${task.brandDefinition.industry}
+        Target Audience: ${task.brandDefinition.targetAudience}
+        Company Values: ${task.brandDefinition.companyValues.join(', ')}
+        Communication Tone: ${task.brandDefinition.tone}
+        ${task.brandDefinition.additionalInfo ? `Additional Information: ${task.brandDefinition.additionalInfo}` : ''}
+        Task Title: ${task.title}
+        Task Description: ${task.description}
+
+        Focus on creating specific and actionable content for the "${sectionTypeUserFriendly}" section. For example, if generating Requirements, list specific technical or functional requirements. If generating Deliverables, list the expected outputs.`
+      }
+    ];
+
+    try {
+      const aiResponse = await callOpenAI(messages);
+      // Assuming aiResponse is the plain text content for the section
+      const newContent = aiResponse.trim();
+
+      // Update the specific section
+      const taskIndex = tasks.findIndex(t => t.id === taskId);
+      if (taskIndex === -1) return null;
+
+      const sectionIndex = tasks[taskIndex].sections?.findIndex(s => s.id === sectionId);
+      if (sectionIndex === undefined || sectionIndex === -1) return null;
+
+      tasks[taskIndex].sections![sectionIndex].content = newContent;
+      saveTasks();
+      return tasks[taskIndex].sections![sectionIndex];
+
+    } catch (error) {
+      console.error(`Error generating content for section ${sectionId}:`, error);
+      throw error; // Re-throw to be caught by useMutation
     }
   },
 

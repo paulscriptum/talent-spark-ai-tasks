@@ -15,9 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { TaskResponse, TaskSection } from '../types';
-import { ArrowLeft, Clock, Check, FileText, PenLine, Link2, AlertCircle, Info, Copy } from 'lucide-react';
+import { ArrowLeft, Clock, Check, FileText, PenLine, Link2, AlertCircle, Info, Copy, Bot } from 'lucide-react';
 import { Form, FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
+import EditSectionForm from '@/components/EditSectionForm';
+import EditDescriptionForm from '@/components/EditDescriptionForm';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -76,6 +77,25 @@ const ProjectDetail = () => {
     },
     onError: () => {
       toast.error('Failed to update description. Please try again.');
+    }
+  });
+
+  const generateSectionContentMutation = useMutation({
+    mutationFn: (data: { taskId: string, sectionId: string }) => {
+      return taskService.generateSectionContentWithAI(data.taskId, data.sectionId);
+    },
+    onSuccess: (updatedSection) => {
+      if (updatedSection) {
+        toast.success(`AI generated content for ${updatedSection.type}`);
+        refetch(); // Refetch to get all task data including the new section content
+        // Automatically open the edit mode for the section with new content
+        setEditingSection(updatedSection.id);
+      } else {
+        toast.error('Failed to get updated section data from AI generation.');
+      }
+    },
+    onError: (error) => {
+      toast.error(`Failed to generate content with AI: ${error.message}`);
     }
   });
 
@@ -155,49 +175,13 @@ const ProjectDetail = () => {
     };
 
     if (isEditing) {
-      const form = useForm({
-        defaultValues: {
-          content: section.content
-        }
-      });
-      
       return (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit((data) => handleSectionEdit(section.id, data.content))}>
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Textarea 
-                      {...field} 
-                      className="min-h-[150px] bg-black/30"
-                      autoFocus
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <div className="flex justify-end gap-2 mt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setEditingSection(null)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                size="sm"
-                disabled={updateSectionMutation.isPending}
-              >
-                {updateSectionMutation.isPending ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <EditSectionForm 
+          section={section} 
+          onSave={handleSectionEdit} 
+          onCancel={() => setEditingSection(null)} 
+          isSaving={updateSectionMutation.isPending}
+        />
       );
     }
     
@@ -328,54 +312,18 @@ const ProjectDetail = () => {
               
               {/* Task Content Card */}
               <Card className="glass-card">
-                <CardHeader className="glass-header">
+                <CardHeader className="glass-header flex flex-row items-center justify-between">
                   <CardTitle>Task Description</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="p-6">
                     {editingDescription ? (
-                      <div>
-                        <Form {...useForm({
-                          defaultValues: {
-                            description: task.description
-                          }
-                        })}>
-                          <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.currentTarget);
-                            const description = formData.get('description') as string;
-                            handleDescriptionEdit(description);
-                          }}>
-                            <FormItem>
-                              <FormControl>
-                                <Textarea 
-                                  name="description"
-                                  className="min-h-[150px] bg-black/30"
-                                  defaultValue={task.description}
-                                  autoFocus
-                                />
-                              </FormControl>
-                            </FormItem>
-                            <div className="flex justify-end gap-2 mt-4">
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => setEditingDescription(false)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button 
-                                type="submit" 
-                                size="sm"
-                                disabled={updateDescriptionMutation.isPending}
-                              >
-                                {updateDescriptionMutation.isPending ? 'Saving...' : 'Save Changes'}
-                              </Button>
-                            </div>
-                          </form>
-                        </Form>
-                      </div>
+                      <EditDescriptionForm 
+                        description={task.description}
+                        onSave={handleDescriptionEdit}
+                        onCancel={() => setEditingDescription(false)}
+                        isSaving={updateDescriptionMutation.isPending}
+                      />
                     ) : (
                       <div className="task-content-block mb-6">
                         {task.description}
@@ -398,8 +346,23 @@ const ProjectDetail = () => {
 
               {/* Requirements Section Card */}
               <Card className="glass-card">
-                <CardHeader className="glass-header">
+                <CardHeader className="glass-header flex flex-row items-center justify-between">
                   <CardTitle className="text-xl">Requirements</CardTitle>
+                  {(task.sections?.find(s => s.type === 'requirements') && id) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        const currentSection = task.sections?.find(s => s.type === 'requirements');
+                        if (currentSection) generateSectionContentMutation.mutate({ taskId: id, sectionId: currentSection.id });
+                      }}
+                      disabled={generateSectionContentMutation.isPending && generateSectionContentMutation.variables?.sectionId === task.sections?.find(s => s.type === 'requirements')?.id}
+                    >
+                      <Bot className="h-3.5 w-3.5 mr-1" />
+                      {generateSectionContentMutation.isPending && generateSectionContentMutation.variables?.sectionId === task.sections?.find(s => s.type === 'requirements')?.id ? 'Generating...' : 'Generate with AI'}
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent className="p-6">
                   {task.sections?.filter(section => section.type === 'requirements').map((section) => (
@@ -415,8 +378,23 @@ const ProjectDetail = () => {
 
               {/* Deliverables Section Card */}
               <Card className="glass-card">
-                <CardHeader className="glass-header">
+                <CardHeader className="glass-header flex flex-row items-center justify-between">
                   <CardTitle className="text-xl">Deliverables</CardTitle>
+                  {(task.sections?.find(s => s.type === 'deliverables') && id) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        const currentSection = task.sections?.find(s => s.type === 'deliverables');
+                        if (currentSection) generateSectionContentMutation.mutate({ taskId: id, sectionId: currentSection.id });
+                      }}
+                      disabled={generateSectionContentMutation.isPending && generateSectionContentMutation.variables?.sectionId === task.sections?.find(s => s.type === 'deliverables')?.id}
+                    >
+                      <Bot className="h-3.5 w-3.5 mr-1" />
+                      {generateSectionContentMutation.isPending && generateSectionContentMutation.variables?.sectionId === task.sections?.find(s => s.type === 'deliverables')?.id ? 'Generating...' : 'Generate with AI'}
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent className="p-6">
                   {task.sections?.filter(section => section.type === 'deliverables').map((section) => (
@@ -432,8 +410,23 @@ const ProjectDetail = () => {
 
               {/* Evaluation Criteria Card */}
               <Card className="glass-card">
-                <CardHeader className="glass-header">
+                <CardHeader className="glass-header flex flex-row items-center justify-between">
                   <CardTitle className="text-xl">Evaluation Criteria</CardTitle>
+                  {(task.sections?.find(s => s.type === 'evaluation') && id) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        const currentSection = task.sections?.find(s => s.type === 'evaluation');
+                        if (currentSection) generateSectionContentMutation.mutate({ taskId: id, sectionId: currentSection.id });
+                      }}
+                      disabled={generateSectionContentMutation.isPending && generateSectionContentMutation.variables?.sectionId === task.sections?.find(s => s.type === 'evaluation')?.id}
+                    >
+                      <Bot className="h-3.5 w-3.5 mr-1" />
+                      {generateSectionContentMutation.isPending && generateSectionContentMutation.variables?.sectionId === task.sections?.find(s => s.type === 'evaluation')?.id ? 'Generating...' : 'Generate with AI'}
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent className="p-6">
                   {task.sections?.filter(section => section.type === 'evaluation').map((section) => (
@@ -449,8 +442,23 @@ const ProjectDetail = () => {
 
               {/* Notes Card */}
               <Card className="glass-card">
-                <CardHeader className="glass-header">
+                <CardHeader className="glass-header flex flex-row items-center justify-between">
                   <CardTitle className="text-xl">Notes</CardTitle>
+                  {(task.sections?.find(s => s.type === 'note') && id) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        const currentSection = task.sections?.find(s => s.type === 'note');
+                        if (currentSection) generateSectionContentMutation.mutate({ taskId: id, sectionId: currentSection.id });
+                      }}
+                      disabled={generateSectionContentMutation.isPending && generateSectionContentMutation.variables?.sectionId === task.sections?.find(s => s.type === 'note')?.id}
+                    >
+                      <Bot className="h-3.5 w-3.5 mr-1" />
+                      {generateSectionContentMutation.isPending && generateSectionContentMutation.variables?.sectionId === task.sections?.find(s => s.type === 'note')?.id ? 'Generating...' : 'Generate with AI'}
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent className="p-6">
                   {task.sections?.filter(section => section.type === 'note').map((section) => (
