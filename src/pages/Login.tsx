@@ -3,21 +3,38 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, loginWithGoogle, isLoading } = useAuth();
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const { loginWithEmail, registerWithEmail, loginWithGoogle, isLoading } = useAuth();
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
+    if (isRegisterMode) {
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+      await registerWithEmail(email, password);
+    } else {
+      await loginWithEmail(email, password);
+    }
   };
 
   const handleGoogleLogin = async () => {
     await loginWithGoogle();
+  };
+
+  const toggleMode = () => {
+    setIsRegisterMode(!isRegisterMode);
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
   };
 
   return (
@@ -26,7 +43,7 @@ const Login = () => {
         <div className="flex flex-col items-center text-center">
           <div className="mb-4 flex items-center justify-center">
             <div className="bg-primary rounded-md p-2">
-              <ClipboardCheck className="h-8 w-8 text-white" />
+              {isRegisterMode ? <UserPlus className="h-8 w-8 text-white" /> : <ClipboardCheck className="h-8 w-8 text-white" />}
             </div>
           </div>
           <div className="text-center">
@@ -39,12 +56,12 @@ const Login = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            <CardTitle>{isRegisterMode ? "Create Account" : "Sign In"}</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              {isRegisterMode ? "Enter your details to create a new account" : "Enter your credentials to access your account"}
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleEmailLogin}>
+          <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -55,6 +72,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="email"
                 />
               </div>
               <div className="space-y-2">
@@ -66,12 +84,29 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete={isRegisterMode ? "new-password" : "current-password"}
                 />
               </div>
+              {isRegisterMode && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input 
+                    id="confirmPassword" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+              )}
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In with Email"}
+                {isLoading 
+                  ? (isRegisterMode ? "Creating Account..." : "Signing In...") 
+                  : (isRegisterMode ? "Create Account" : "Sign In with Email")}
               </Button>
               
               <div className="relative flex items-center w-full">
@@ -101,9 +136,9 @@ const Login = () => {
         </Card>
         
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
-          <Button variant="link" className="p-0 h-auto">
-            Sign up
+          {isRegisterMode ? "Already have an account?" : "Don't have an account?"}{" "}
+          <Button variant="link" className="p-0 h-auto" onClick={toggleMode}>
+            {isRegisterMode ? "Sign In" : "Sign up"}
           </Button>
         </p>
       </div>
