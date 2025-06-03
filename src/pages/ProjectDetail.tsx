@@ -14,8 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { TaskResponse, TaskSection } from '../types';
-import { ArrowLeft, Clock, Check, FileText, PenLine, Link2, AlertCircle, Info, Copy, Bot } from 'lucide-react';
+import { TaskResponse, TaskSection, FileAttachment } from '../types';
+import { ArrowLeft, Clock, Check, FileText, PenLine, Link2, AlertCircle, Info, Copy, Bot, Upload, X } from 'lucide-react';
 import { Form, FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
 import EditSectionForm from '@/components/EditSectionForm';
 import EditDescriptionForm from '@/components/EditDescriptionForm';
@@ -24,11 +24,13 @@ const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [newResponse, setNewResponse] = useState({ candidateName: '', responseContent: '' });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState("details");
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingDescription, setEditingDescription] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const shareLinkRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { data: task, isLoading, refetch } = useQuery({
     queryKey: ['task', id],
@@ -45,6 +47,7 @@ const ProjectDetail = () => {
     onSuccess: () => {
       toast.success('Response submitted and analyzed!');
       setNewResponse({ candidateName: '', responseContent: '' });
+      setSelectedFiles([]);
       refetch();
     },
     onError: () => {
@@ -99,13 +102,58 @@ const ProjectDetail = () => {
     }
   });
 
-  const handleSubmitResponse = () => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles(prev => [...prev, ...files]);
+    // Reset the input value so the same file can be selected again if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const convertFilesToAttachments = async (files: File[]): Promise<FileAttachment[]> => {
+    const attachments: FileAttachment[] = [];
+    
+    for (const file of files) {
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      
+      attachments.push({
+        id: `file-${Date.now()}-${Math.random()}`,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        dataUrl
+      });
+    }
+    
+    return attachments;
+  };
+
+  const handleSubmitResponse = async () => {
     if (!newResponse.candidateName.trim() || !newResponse.responseContent.trim()) {
       toast.error('Please fill in all fields');
       return;
     }
     
-    submitResponseMutation.mutate(newResponse);
+    const attachments = await convertFilesToAttachments(selectedFiles);
+    
+    submitResponseMutation.mutate({
+      candidateName: newResponse.candidateName,
+      responseContent: newResponse.responseContent,
+      attachments
+    });
   };
   
   const handleTabChange = (value: string) => {
@@ -592,6 +640,29 @@ const ProjectDetail = () => {
                       <div className="content-block whitespace-pre-wrap">
                         <p>{response.responseContent}</p>
                       </div>
+                      
+                      {response.attachments && response.attachments.length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="text-sm font-medium mb-2 text-primary">Attachments</h4>
+                          <div className="space-y-2">
+                            {response.attachments.map((attachment) => (
+                              <div key={attachment.id} className="content-block">
+                                <a 
+                                  href={attachment.dataUrl} 
+                                  download={attachment.name}
+                                  className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  <span>{attachment.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    ({(attachment.size / 1024).toFixed(1)} KB)
+                                  </span>
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     {response.aiAnalysis && (
@@ -697,14 +768,60 @@ const ProjectDetail = () => {
                     className="bg-black/30"
                   />
                 </div>
+                
+                {selectedFiles.length > 0 && (
+                  <div>
+                    <Label>Attached Files:</Label>
+                    <div className="mt-2 space-y-2">
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-black/30 p-2 rounded-md">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{file.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              ({(file.size / 1024).toFixed(1)} KB)
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFile(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={handleFileSelect}
+                  accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip,.rar"
+                  style={{ display: 'none' }}
+                />
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end p-6">
+            <CardFooter className="flex justify-between p-6">
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={triggerFileSelect}
+                className="flex items-center gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Attach Files
+              </Button>
               <Button 
                 onClick={handleSubmitResponse} 
                 disabled={submitResponseMutation.isPending}
               >
-                {submitResponseMutation.isPending ? 'Submitting...' : 'Submit and Analyze'}
+                {submitResponseMutation.isPending ? 'Submitting...' : 'Submit Response'}
               </Button>
             </CardFooter>
           </Card>

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { taskService } from '../services/taskService';
@@ -9,15 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Upload, FileText, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { TaskResponse } from '@/types';
+import { TaskResponse, FileAttachment } from '@/types';
 
 const CandidateSubmission = () => {
   const { id } = useParams<{ id: string }>();
   const [candidateName, setCandidateName] = useState('');
   const [responseContent, setResponseContent] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { data: task, isLoading, error } = useQuery({
     queryKey: ['task-for-candidate', id],
@@ -39,8 +40,47 @@ const CandidateSubmission = () => {
       toast.error('Failed to submit your response. Please try again.');
     }
   });
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles(prev => [...prev, ...files]);
+    // Reset the input value so the same file can be selected again if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const convertFilesToAttachments = async (files: File[]): Promise<FileAttachment[]> => {
+    const attachments: FileAttachment[] = [];
+    
+    for (const file of files) {
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      
+      attachments.push({
+        id: `file-${Date.now()}-${Math.random()}`,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        dataUrl
+      });
+    }
+    
+    return attachments;
+  };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!candidateName.trim()) {
@@ -53,7 +93,13 @@ const CandidateSubmission = () => {
       return;
     }
     
-    submitMutation.mutate({ candidateName, responseContent });
+    const attachments = await convertFilesToAttachments(selectedFiles);
+    
+    submitMutation.mutate({ 
+      candidateName, 
+      responseContent,
+      attachments 
+    });
   };
   
   if (isLoading) {
@@ -188,8 +234,54 @@ const CandidateSubmission = () => {
                   className="bg-black/30"
                 />
               </div>
+              
+              {selectedFiles.length > 0 && (
+                <div>
+                  <Label>Attached Files:</Label>
+                  <div className="mt-2 space-y-2">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-black/30 p-2 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{file.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({(file.size / 1024).toFixed(1)} KB)
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip,.rar"
+                style={{ display: 'none' }}
+              />
             </CardContent>
-            <CardFooter className="flex justify-end">
+            <CardFooter className="flex justify-between">
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={triggerFileSelect}
+                className="flex items-center gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Attach Files
+              </Button>
               <Button 
                 type="submit" 
                 disabled={submitMutation.isPending}

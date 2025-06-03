@@ -1,4 +1,3 @@
-
 export interface Task {
   id: string;
   title: string;
@@ -27,12 +26,21 @@ export interface BrandDefinition {
   additionalInfo?: string;
 }
 
+export interface FileAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  dataUrl: string; // Base64 encoded file data for localStorage
+}
+
 export interface TaskResponse {
   id: string;
   candidateName: string;
   responseContent: string;
   submittedAt: string;
   aiAnalysis?: AiAnalysis;
+  attachments?: FileAttachment[];
 }
 
 export interface AiAnalysis {
