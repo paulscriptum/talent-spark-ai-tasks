@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children, className }) => {
                 <span className="h-4 w-4 text-primary-foreground flex items-center justify-center font-semibold text-sm">T</span>
               </div>
               <Link to="/" className="flex items-center gap-2">
-                <span className="font-semibold text-foreground text-lg brand-font">TESTASK</span>
+                <span className="font-semibold text-foreground text-lg brand-font">testask</span>
               </Link>
             </div>
           </div>

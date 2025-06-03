@@ -63,10 +63,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           name: email.split('@')[0]
         });
         setIsLoggedIn(true);
-        navigate("/");
+        navigate("/dashboard");
         toast({
           title: "Welcome back!",
-          description: "You've successfully logged in to TESTASK.",
+          description: "You've successfully logged in to testask.",
         });
       } else {
         throw new Error("Invalid credentials");
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: "Google User"
       });
       setIsLoggedIn(true);
-      navigate("/");
+      navigate("/dashboard");
       toast({
         title: "Welcome!",
         description: "You've successfully logged in with Google.",

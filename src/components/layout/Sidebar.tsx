@@ -18,7 +18,7 @@ const Sidebar = () => {
   const navigationItems = [
     {
       name: 'Dashboard',
-      href: '/',
+      href: '/dashboard',
       icon: <BarChart className="h-5 w-5" />,
       exact: true
     },
@@ -44,7 +44,7 @@ const Sidebar = () => {
           <Sparkles className="h-5 w-5 text-primary-foreground" />
         </div>
         <Link to="/" className="flex items-center gap-2">
-          <span className="text-xl font-semibold text-sidebar-foreground brand-font">TESTASK</span>
+          <span className="text-xl font-semibold text-sidebar-foreground brand-font">testask</span>
         </Link>
       </div>
 
@@ -97,7 +97,7 @@ const Sidebar = () => {
         </Button>
 
         <p className="text-xs text-sidebar-muted-foreground">
-          TESTASK AI © 2025
+          testask ai © 2025
         </p>
       </div>
     </div>

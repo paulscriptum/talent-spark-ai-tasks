@@ -50,7 +50,7 @@ const Dashboard = () => {
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground text-lg">
-            Welcome to TESTASK - your AI-powered recruitment task manager
+            Welcome to testask - your AI-powered recruitment task manager
           </p>
         </div>
 

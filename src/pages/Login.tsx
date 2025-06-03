@@ -30,7 +30,7 @@ const Login = () => {
             </div>
           </div>
           <div className="text-center">
-            <h1 className="text-3xl font-bold brand-font">TESTASK</h1>
+            <h1 className="text-3xl font-bold brand-font">testask</h1>
             <p className="text-muted-foreground mt-2">
               AI-powered recruitment task management
             </p>

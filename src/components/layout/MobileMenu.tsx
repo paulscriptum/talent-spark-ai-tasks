@@ -7,7 +7,8 @@ import {
   BarChart, 
   Menu,
   X,
-  LogOut
+  LogOut,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -21,14 +22,14 @@ const MobileMenu = () => {
   const navigationItems = [
     {
       name: 'Dashboard',
-      href: '/',
+      href: '/dashboard',
       icon: <BarChart className="h-5 w-5" />,
       exact: true
     },
     {
       name: 'Generate Task',
       href: '/generate',
-      icon: <FileText className="h-5 w-5" />,
+      icon: <Sparkles className="h-5 w-5" />,
       exact: false
     },
     {
@@ -59,7 +60,7 @@ const MobileMenu = () => {
               <div className="bg-primary rounded-md p-1 mr-2">
                 <ClipboardCheck className="h-6 w-6 text-white" />
               </div>
-              <span className="text-lg font-semibold brand-font">TESTASK</span>
+              <span className="text-lg font-semibold brand-font">testask</span>
             </div>
             
             <nav className="flex-1 p-4 space-y-1">
@@ -105,7 +106,7 @@ const MobileMenu = () => {
               </Button>
               
               <p className="text-xs text-muted-foreground text-center">
-                TESTASK AI © 2025
+                testask ai © 2025
               </p>
             </div>
           </div>
