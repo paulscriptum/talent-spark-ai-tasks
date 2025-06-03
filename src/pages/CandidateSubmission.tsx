@@ -155,149 +155,153 @@ const CandidateSubmission = () => {
   }
   
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">{task.title}</h1>
-          <p className="text-muted-foreground mt-1">
+    <div className="page-container">
+      <div className="main-content">
+        <div className="mb-8">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">{task.title}</h1>
+          <p className="text-muted-foreground mt-2 text-lg">
             {task.brandDefinition.companyName} • Deadline: {format(new Date(task.deadline || ''), 'PPP')}
           </p>
         </div>
         
-        <Card className="glass-card">
-          <CardHeader className="glass-header">
-            <CardTitle className="text-xl">Task Description</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="whitespace-pre-wrap">{task.description}</p>
-          </CardContent>
-        </Card>
-        
-        {task.sections?.filter(section => section.type === 'requirements').length > 0 && (
+        <div className="space-y-8">
           <Card className="glass-card">
             <CardHeader className="glass-header">
-              <CardTitle className="text-xl">Requirements</CardTitle>
+              <CardTitle className="text-xl">Task Description</CardTitle>
             </CardHeader>
-            <CardContent>
-              {task.sections?.filter(section => section.type === 'requirements').map((section) => (
-                <div key={section.id} className="mb-4 last:mb-0">
-                  <h3 className="font-semibold mb-2">{section.title}</h3>
-                  <p className="whitespace-pre-wrap">{section.content}</p>
-                </div>
-              ))}
+            <CardContent className="p-6">
+              <p className="whitespace-pre-wrap leading-relaxed">{task.description}</p>
             </CardContent>
           </Card>
-        )}
-        
-        {task.sections?.filter(section => section.type === 'deliverables').length > 0 && (
-          <Card className="glass-card">
-            <CardHeader className="glass-header">
-              <CardTitle className="text-xl">Deliverables</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {task.sections?.filter(section => section.type === 'deliverables').map((section) => (
-                <div key={section.id} className="mb-4 last:mb-0">
-                  <h3 className="font-semibold mb-2">{section.title}</h3>
-                  <p className="whitespace-pre-wrap">{section.content}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-        
-        <Card className="glass-card">
-          <CardHeader className="glass-header">
-            <CardTitle>Submit Your Response</CardTitle>
-            <CardDescription>Complete the form below to submit your response to this task</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="candidateName">Your Name</Label>
-                <Input 
-                  id="candidateName"
-                  value={candidateName}
-                  onChange={(e) => setCandidateName(e.target.value)}
-                  placeholder="Enter your full name"
-                  className="bg-black/30"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="responseContent">Your Response</Label>
-                <Textarea
-                  id="responseContent"
-                  value={responseContent}
-                  onChange={(e) => setResponseContent(e.target.value)}
-                  placeholder="Enter your response to this task..."
-                  rows={10}
-                  className="bg-black/30"
-                />
-              </div>
-              
-              {selectedFiles.length > 0 && (
-                <div>
-                  <Label>Attached Files:</Label>
-                  <div className="mt-2 space-y-2">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between bg-black/30 p-2 rounded-md">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{file.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            ({(file.size / 1024).toFixed(1)} KB)
-                          </span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+          
+          {task.sections?.filter(section => section.type === 'requirements').length > 0 && (
+            <Card className="glass-card">
+              <CardHeader className="glass-header">
+                <CardTitle className="text-xl">Requirements</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {task.sections?.filter(section => section.type === 'requirements').map((section) => (
+                  <div key={section.id} className="mb-4 last:mb-0">
+                    <h3 className="font-semibold mb-3 text-foreground">{section.title}</h3>
+                    <p className="whitespace-pre-wrap leading-relaxed text-foreground/90">{section.content}</p>
                   </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+          
+          {task.sections?.filter(section => section.type === 'deliverables').length > 0 && (
+            <Card className="glass-card">
+              <CardHeader className="glass-header">
+                <CardTitle className="text-xl">Deliverables</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {task.sections?.filter(section => section.type === 'deliverables').map((section) => (
+                  <div key={section.id} className="mb-4 last:mb-0">
+                    <h3 className="font-semibold mb-3 text-foreground">{section.title}</h3>
+                    <p className="whitespace-pre-wrap leading-relaxed text-foreground/90">{section.content}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+          
+          <Card className="glass-card">
+            <CardHeader className="glass-header">
+              <CardTitle>Submit Your Response</CardTitle>
+              <CardDescription>Complete the form below to submit your response to this task</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-6 p-6">
+                <div>
+                  <Label htmlFor="candidateName" className="text-foreground font-medium">Your Name</Label>
+                  <Input 
+                    id="candidateName"
+                    value={candidateName}
+                    onChange={(e) => setCandidateName(e.target.value)}
+                    placeholder="Enter your full name"
+                    className="form-input mt-2"
+                  />
                 </div>
-              )}
-              
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                onChange={handleFileSelect}
-                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip,.rar"
-                style={{ display: 'none' }}
-              />
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button 
-                type="button"
-                variant="outline"
-                onClick={triggerFileSelect}
-                className="flex items-center gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                Attach Files
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={submitMutation.isPending}
-              >
-                {submitMutation.isPending ? (
-                  'Submitting...'
-                ) : (
-                  <>
-                    <Send className="mr-2 h-4 w-4" />
-                    Submit Response
-                  </>
+                
+                <div>
+                  <Label htmlFor="responseContent" className="text-foreground font-medium">Your Response</Label>
+                  <Textarea
+                    id="responseContent"
+                    value={responseContent}
+                    onChange={(e) => setResponseContent(e.target.value)}
+                    placeholder="Enter your response to this task..."
+                    rows={10}
+                    className="form-input mt-2"
+                  />
+                </div>
+                
+                {selectedFiles.length > 0 && (
+                  <div>
+                    <Label className="text-foreground font-medium">Attached Files:</Label>
+                    <div className="mt-3 space-y-3">
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-accent/30 p-3 rounded-lg border border-border">
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-foreground">{file.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              ({(file.size / 1024).toFixed(1)} KB)
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFile(index)}
+                            className="hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
+                
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={handleFileSelect}
+                  accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip,.rar"
+                  style={{ display: 'none' }}
+                />
+              </CardContent>
+              <CardFooter className="flex justify-between p-6 bg-muted/30 border-t border-border">
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={triggerFileSelect}
+                  className="flex items-center gap-2 btn-hover"
+                >
+                  <Upload className="h-4 w-4" />
+                  Attach Files
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={submitMutation.isPending}
+                  className="btn-hover"
+                >
+                  {submitMutation.isPending ? (
+                    'Submitting...'
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Submit Response
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
       </div>
     </div>
   );

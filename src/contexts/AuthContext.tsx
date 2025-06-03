@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -67,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         navigate("/");
         toast({
           title: "Welcome back!",
-          description: "You've successfully logged in to TalentSpark.",
+          description: "You've successfully logged in to TESTASK.",
         });
       } else {
         throw new Error("Invalid credentials");

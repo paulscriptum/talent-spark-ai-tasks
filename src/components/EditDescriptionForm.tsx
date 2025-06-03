@@ -33,7 +33,7 @@ const EditDescriptionForm: React.FC<EditDescriptionFormProps> = ({ description, 
               <FormControl>
                 <Textarea
                   {...field}
-                  className="min-h-[150px] bg-black/30"
+                  className="min-h-[150px] form-input"
                   autoFocus
                 />
               </FormControl>

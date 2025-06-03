@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,8 +29,12 @@ const Login = () => {
               <ClipboardCheck className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold">TalentSpark</h1>
-          <p className="mt-2 text-muted-foreground">Sign in to your account to continue</p>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold brand-font">TESTASK</h1>
+            <p className="text-muted-foreground mt-2">
+              AI-powered recruitment task management
+            </p>
+          </div>
         </div>
         
         <Card>

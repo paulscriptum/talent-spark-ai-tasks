@@ -332,14 +332,14 @@ const ProjectDetail = () => {
                   <div className="flex items-center gap-2">
                     <div 
                       ref={shareLinkRef}
-                      className="bg-black/60 rounded-md border border-white/10 px-3 py-2 text-sm flex-1 overflow-hidden"
+                      className="bg-muted/30 rounded-lg border border-border px-4 py-3 text-sm flex-1 overflow-hidden font-mono text-foreground"
                     >
                       <div className="truncate">{shareLink}</div>
                     </div>
                     <Button
                       variant="outline" 
                       size="sm" 
-                      className="shrink-0"
+                      className="shrink-0 btn-hover"
                       onClick={handleCopyLink}
                     >
                       {linkCopied ? (
@@ -400,7 +400,7 @@ const ProjectDetail = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-muted-foreground hover:text-foreground"
+                      className="btn-ai-gradient"
                       onClick={() => {
                         const currentSection = task.sections?.find(s => s.type === 'requirements');
                         if (currentSection) generateSectionContentMutation.mutate({ taskId: id, sectionId: currentSection.id });
@@ -432,7 +432,7 @@ const ProjectDetail = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-muted-foreground hover:text-foreground"
+                      className="btn-ai-gradient"
                       onClick={() => {
                         const currentSection = task.sections?.find(s => s.type === 'deliverables');
                         if (currentSection) generateSectionContentMutation.mutate({ taskId: id, sectionId: currentSection.id });
@@ -464,7 +464,7 @@ const ProjectDetail = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-muted-foreground hover:text-foreground"
+                      className="btn-ai-gradient"
                       onClick={() => {
                         const currentSection = task.sections?.find(s => s.type === 'evaluation');
                         if (currentSection) generateSectionContentMutation.mutate({ taskId: id, sectionId: currentSection.id });
@@ -496,7 +496,7 @@ const ProjectDetail = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-muted-foreground hover:text-foreground"
+                      className="btn-ai-gradient"
                       onClick={() => {
                         const currentSection = task.sections?.find(s => s.type === 'note');
                         if (currentSection) generateSectionContentMutation.mutate({ taskId: id, sectionId: currentSection.id });
@@ -585,16 +585,22 @@ const ProjectDetail = () => {
                     <Button 
                       variant="outline" 
                       size="sm"
+                      className={task.status === 'completed' ? 'btn-hover border-primary/50 text-primary hover:bg-primary/10' : 'btn-hover'}
                       onClick={() => {
                         if (id) {
-                          taskService.markTaskComplete(id);
-                          refetch();
-                          toast.success('Task marked as completed');
+                          if (task.status === 'completed') {
+                            taskService.markTaskUncomplete(id);
+                            refetch();
+                            toast.success('Task marked as active');
+                          } else {
+                            taskService.markTaskComplete(id);
+                            refetch();
+                            toast.success('Task marked as completed');
+                          }
                         }
                       }}
-                      disabled={task.status === 'completed'}
                     >
-                      {task.status === 'completed' ? 'Task Completed' : 'Mark as Complete'}
+                      {task.status === 'completed' ? 'Mark as Active' : 'Mark as Complete'}
                     </Button>
                   </div>
                 </CardContent>
@@ -753,7 +759,7 @@ const ProjectDetail = () => {
                     value={newResponse.candidateName}
                     onChange={(e) => setNewResponse(prev => ({ ...prev, candidateName: e.target.value }))}
                     placeholder="Enter candidate's full name"
-                    className="bg-black/30"
+                    className="form-input"
                   />
                 </div>
                 
@@ -765,7 +771,7 @@ const ProjectDetail = () => {
                     onChange={(e) => setNewResponse(prev => ({ ...prev, responseContent: e.target.value }))}
                     placeholder="Enter the candidate's response to this task..."
                     rows={10}
-                    className="bg-black/30"
+                    className="form-input"
                   />
                 </div>
                 
@@ -774,7 +780,7 @@ const ProjectDetail = () => {
                     <Label>Attached Files:</Label>
                     <div className="mt-2 space-y-2">
                       {selectedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between bg-black/30 p-2 rounded-md">
+                        <div key={index} className="flex items-center justify-between bg-accent/30 p-3 rounded-lg border border-border">
                           <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">{file.name}</span>

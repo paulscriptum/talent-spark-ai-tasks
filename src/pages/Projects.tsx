@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { taskService } from '../services/taskService';
@@ -8,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, Plus, Building } from 'lucide-react';
 
 const Projects = () => {
   const { data: tasks, isLoading } = useQuery({
@@ -18,87 +17,106 @@ const Projects = () => {
 
   return (
     <Layout>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Active Projects</h1>
-        <Button as={Link} to="/generate">
-          Generate New Task
-        </Button>
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center my-12">
-          <p>Loading projects...</p>
-        </div>
-      ) : tasks?.length === 0 ? (
-        <Card className="text-center p-12 glass-card">
-          <CardContent className="pt-10 space-y-4">
-            <ClipboardList className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="text-xl font-medium">No projects found</h3>
-            <p className="text-muted-foreground">
-              Get started by generating your first task
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Active Projects</h1>
+            <p className="text-muted-foreground mt-2 text-lg">
+              Manage and monitor your recruitment tasks
             </p>
-            <Button as={Link} to="/generate" className="mt-4">
-              Generate Task
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2">
-          {tasks?.map(task => (
-            <Card key={task.id} className="overflow-hidden glass-card">
-              <CardHeader className="glass-header">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{task.title}</CardTitle>
-                  <Badge variant={task.status === 'active' ? 'default' : 'outline'}>
-                    {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <div className="space-y-4">
-                  <div className="text-block">
-                    <p className="text-sm line-clamp-2">{task.description}</p>
-                  </div>
-                  
-                  <div className="text-sm text-muted-foreground">
-                    <div className="flex justify-between">
-                      <span>Company: {task.brandDefinition.companyName}</span>
-                      <span>{task.responses.length} responses</span>
-                    </div>
-                    <div className="mt-1">
-                      Created {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1">
-                    {task.brandDefinition.companyValues.slice(0, 3).map((value, idx) => (
-                      <Badge key={idx} variant="outline" className="bg-primary/10">
-                        {value}
-                      </Badge>
-                    ))}
-                    {task.brandDefinition.companyValues.length > 3 && (
-                      <Badge variant="outline" className="bg-primary/10">
-                        +{task.brandDefinition.companyValues.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-
-                  <div className="pt-3">
-                    <Button 
-                      variant="default" 
-                      className="w-full"
-                      as={Link}
-                      to={`/projects/${task.id}`}
-                    >
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          </div>
+          <Button as={Link} to="/generate" className="btn-hover">
+            <Plus className="mr-2 h-4 w-4" />
+            Generate New Task
+          </Button>
         </div>
-      )}
+
+        {isLoading ? (
+          <div className="flex justify-center my-16">
+            <p className="text-muted-foreground">Loading projects...</p>
+          </div>
+        ) : tasks?.length === 0 ? (
+          <Card className="glass-card">
+            <CardContent className="text-center p-16 space-y-6">
+              <div className="mx-auto p-4 bg-muted/50 rounded-lg w-fit">
+                <ClipboardList className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">No projects found</h3>
+                <p className="text-muted-foreground text-base">
+                  Get started by generating your first AI-powered recruitment task
+                </p>
+              </div>
+              <Button as={Link} to="/generate" size="lg" className="btn-hover">
+                <Plus className="mr-2 h-4 w-4" />
+                Generate Your First Task
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {tasks?.map(task => (
+              <Card key={task.id} className="glass-card hover:shadow-md transition-shadow duration-200">
+                <CardHeader className="glass-header">
+                  <div className="flex justify-between items-start gap-3">
+                    <CardTitle className="text-lg font-semibold line-clamp-2">{task.title}</CardTitle>
+                    <Badge 
+                      className={`status-badge shrink-0 ${
+                        task.status === 'active' ? 'status-active' : 'status-completed'
+                      }`}
+                    >
+                      {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6 pt-4">
+                  <div className="space-y-4">
+                    <div className="content-block">
+                      <p className="text-sm text-foreground/90 line-clamp-2">{task.description}</p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Building className="h-4 w-4" />
+                        <span>{task.brandDefinition.companyName}</span>
+                      </div>
+                      
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>{task.responses.length} responses</span>
+                        <span>{formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      {task.brandDefinition.companyValues.slice(0, 3).map((value, idx) => (
+                        <Badge key={idx} variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                          {value}
+                        </Badge>
+                      ))}
+                      {task.brandDefinition.companyValues.length > 3 && (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                          +{task.brandDefinition.companyValues.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="pt-2">
+                      <Button 
+                        variant="default" 
+                        className="w-full btn-hover"
+                        as={Link}
+                        to={`/projects/${task.id}`}
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </Layout>
   );
 };

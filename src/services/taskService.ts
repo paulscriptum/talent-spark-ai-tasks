@@ -413,5 +413,14 @@ export const taskService = {
     tasks[taskIndex].status = 'completed';
     // Save tasks to localStorage after marking a task as complete
     saveTasks();
+  },
+
+  markTaskUncomplete: async (taskId: string): Promise<void> => {
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+    if (taskIndex === -1) return;
+
+    tasks[taskIndex].status = 'active';
+    // Save tasks to localStorage after marking a task as uncomplete
+    saveTasks();
   }
 };

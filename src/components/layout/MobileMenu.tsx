@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -60,7 +59,7 @@ const MobileMenu = () => {
               <div className="bg-primary rounded-md p-1 mr-2">
                 <ClipboardCheck className="h-6 w-6 text-white" />
               </div>
-              <span className="text-lg font-semibold">TalentSpark</span>
+              <span className="text-lg font-semibold brand-font">TESTASK</span>
             </div>
             
             <nav className="flex-1 p-4 space-y-1">
@@ -105,9 +104,9 @@ const MobileMenu = () => {
                 Sign Out
               </Button>
               
-              <div className="mt-4 text-xs text-muted-foreground">
-                TalentSpark AI © 2025
-              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                TESTASK AI © 2025
+              </p>
             </div>
           </div>
         </SheetContent>
