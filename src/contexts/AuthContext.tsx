@@ -1,25 +1,23 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
-import { useGoogleLogin, CodeResponse } from '@react-oauth/google';
-// We don't need jwtDecode for basic Firebase email/pass or Google Sign-in with Firebase directly
-// import { jwtDecode } from 'jwt-decode'; 
+// Removed unused Google OAuth imports since we're using Firebase Google Sign-in
 import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  User as FirebaseUser, // Renaming to avoid conflict with our User type
+  User as FirebaseUser,
   GoogleAuthProvider,
   signInWithPopup
 } from "firebase/auth";
-import { auth } from "../lib/firebase"; // Import your Firebase auth instance
+import { auth } from "../lib/firebase";
 
 type User = {
   id: string;
-  email: string | null; // Email can be null from some providers or if not verified
-  name: string | null; // Name might not always be available directly
+  email: string | null;
+  name: string | null;
   picture?: string | null;
 };
 
@@ -27,10 +25,10 @@ interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
   isLoading: boolean;
-  registerWithEmail: (email: string, password: string) => Promise<void>; // New register function
-  loginWithEmail: (email: string, password: string) => Promise<void>; // Renamed from 'login'
-  loginWithGoogle: () => Promise<void>; // Will now use Firebase Google Sign-in
-  logout: () => Promise<void>; // Make logout async to align with Firebase
+  registerWithEmail: (email: string, password: string) => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,7 +49,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           picture: firebaseUser.photoURL,
         };
         setUser(appUser);
-        // localStorage isn't strictly needed for session with onAuthStateChanged but can be useful for immediate UI updates or non-Firebase state
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("user", JSON.stringify(appUser));
       } else {
@@ -61,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setIsLoading(false);
     });
-    return () => unsubscribe(); // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   const isLoggedIn = !!user;
@@ -78,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         picture: firebaseUser.photoURL
       };
       setUser(appUser);
-      localStorage.setItem("user", JSON.stringify(appUser)); // Optional: for immediate use elsewhere
+      localStorage.setItem("user", JSON.stringify(appUser));
       localStorage.setItem("isLoggedIn", "true");
       navigate("/dashboard");
       toast({
@@ -101,12 +98,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      // onAuthStateChanged will handle setting user state and navigating
       toast({
         title: "Welcome back!",
         description: "You've successfully logged in.",
       });
-      navigate("/dashboard"); // Explicit navigation as onAuthStateChanged might have a slight delay
+      navigate("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
       toast({
@@ -119,22 +115,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const firebaseGoogleLogin = async () => {
+  const loginWithGoogle = async () => {
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
+    
+    // Add custom parameters for better UX
+    provider.addScope('profile');
+    provider.addScope('email');
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+
     try {
-      await signInWithPopup(auth, provider);
-      // onAuthStateChanged will handle setting user state and navigating
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
+      
+      console.log("Google login successful:", firebaseUser);
+      
       toast({
         title: "Welcome!",
         description: "You've successfully logged in with Google.",
       });
-       navigate("/dashboard"); // Explicit navigation
+      navigate("/dashboard");
     } catch (error: any) {
-      console.error("Firebase Google login error:", error);
+      console.error("Google login error:", error);
+      
+      let errorMessage = "An error occurred during Google authentication.";
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = "Sign-in was cancelled. Please try again.";
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = "Popup was blocked by your browser. Please allow popups and try again.";
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        errorMessage = "Sign-in was cancelled. Please try again.";
+      }
+      
       toast({
         title: "Google Login Failed",
-        description: error.message || "An error occurred during Google authentication.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -142,11 +160,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logoutUser = async () => {
+  const logout = async () => {
     setIsLoading(true);
     try {
       await signOut(auth);
-      // onAuthStateChanged will handle clearing user state
       navigate("/login");
       toast({
         title: "Logged Out",
@@ -170,8 +187,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
     registerWithEmail,
     loginWithEmail,
-    loginWithGoogle: firebaseGoogleLogin,
-    logout: logoutUser,
+    loginWithGoogle,
+    logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

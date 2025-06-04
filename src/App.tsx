@@ -13,7 +13,6 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import LandingPage from "./pages/LandingPage";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const queryClient = new QueryClient();
 
@@ -54,28 +53,18 @@ const AuthenticatedApp = () => {
 };
 
 const App = () => {
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-  if (!googleClientId) {
-    console.error("Google Client ID not found. Please set VITE_GOOGLE_CLIENT_ID in your .env file.");
-    // Optionally, render an error message or a fallback UI
-    return <div>Google Client ID is missing. Please check your environment configuration.</div>;
-  }
-
   return (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AuthProvider>
-              <AuthenticatedApp />
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </GoogleOAuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <AuthenticatedApp />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 
