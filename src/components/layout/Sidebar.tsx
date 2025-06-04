@@ -79,24 +79,24 @@ const Sidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border flex flex-col items-center">
         {user && (
-          <div className="px-3 py-3 mb-4 bg-sidebar-accent/30 rounded-lg">
-            <div className="font-medium text-sidebar-foreground text-sm">{user.name}</div>
-            <div className="text-xs text-sidebar-foreground/60">{user.email}</div>
+          <div className="px-3 py-3 mb-4 bg-sidebar-accent/30 rounded-lg w-full text-center">
+            <div className="font-medium text-sidebar-foreground text-sm truncate">{user.name || 'User'}</div>
+            <div className="text-xs text-sidebar-foreground/60 truncate">{user.email}</div>
           </div>
         )}
         
         <Button 
           variant="ghost" 
-          className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200"
+          className="w-full max-w-xs justify-center text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 mb-4"
           onClick={logout}
         >
           <LogOut className="h-4 w-4 mr-3" />
           Sign Out
         </Button>
 
-        <p className="text-xs text-sidebar-muted-foreground">
+        <p className="text-xs text-sidebar-muted-foreground text-center">
           testask ai © 2025
         </p>
       </div>
