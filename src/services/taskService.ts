@@ -1,4 +1,4 @@
-import { Task, BrandDefinition, TaskResponse, AiAnalysis, DashboardStats, TaskSection } from '../types';
+import { Task, BrandDefinition, TaskResponse, AiAnalysis, DashboardStats, TaskSection, FileAttachment } from '../types';
 
 // Local storage key for tasks
 const TASKS_STORAGE_KEY = 'assessment_tasks';
@@ -421,6 +421,15 @@ export const taskService = {
 
     tasks[taskIndex].status = 'active';
     // Save tasks to localStorage after marking a task as uncomplete
+    saveTasks();
+  },
+
+  updateTaskAttachments: async (taskId: string, attachments: FileAttachment[]): Promise<void> => {
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+    if (taskIndex === -1) return;
+
+    tasks[taskIndex].brandDefinition.attachments = attachments;
+    // Save tasks to localStorage after updating attachments
     saveTasks();
   }
 };

@@ -3,6 +3,7 @@ import Sidebar from './Sidebar';
 import MobileMenu from './MobileMenu';
 import { cn } from "@/lib/utils";
 import { Link } from 'react-router-dom';
+import { Target } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children, className }) => {
             <MobileMenu />
             <div className="flex items-center">
               <div className="bg-primary rounded-lg p-2 mr-3 shadow-sm">
-                <span className="h-4 w-4 text-primary-foreground flex items-center justify-center font-semibold text-sm">T</span>
+                <Target className="h-4 w-4 text-primary-foreground" />
               </div>
               <Link to="/" className="flex items-center gap-2">
                 <span className="font-semibold text-foreground text-lg brand-font">testask</span>

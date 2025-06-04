@@ -100,7 +100,7 @@ const Dashboard = () => {
               ) : (
                 <div className="space-y-4">
                   {tasks.slice(0, 3).map((task) => (
-                    <Card key={task.id} className="border border-border hover:shadow-md transition-shadow duration-200">
+                    <Card key={task.id} className="border border-border project-card-hover">
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-3">
                           <div>

@@ -28,9 +28,13 @@ const ProjectDetail = () => {
   const [activeTab, setActiveTab] = useState("details");
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingDescription, setEditingDescription] = useState(false);
+  const [editingAttachments, setEditingAttachments] = useState(false);
+  const [editAttachments, setEditAttachments] = useState<FileAttachment[]>([]);
+  const [newAttachmentFiles, setNewAttachmentFiles] = useState<File[]>([]);
   const [linkCopied, setLinkCopied] = useState(false);
   const shareLinkRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const attachmentFileInputRef = useRef<HTMLInputElement>(null);
   
   const { data: task, isLoading, refetch } = useQuery({
     queryKey: ['task', id],
@@ -80,6 +84,21 @@ const ProjectDetail = () => {
     },
     onError: () => {
       toast.error('Failed to update description. Please try again.');
+    }
+  });
+
+  const updateAttachmentsMutation = useMutation({
+    mutationFn: (data: { taskId: string, attachments: FileAttachment[] }) => {
+      return taskService.updateTaskAttachments(data.taskId, data.attachments);
+    },
+    onSuccess: () => {
+      toast.success('Reference files updated successfully!');
+      refetch();
+      setEditingAttachments(false);
+      setNewAttachmentFiles([]);
+    },
+    onError: () => {
+      toast.error('Failed to update reference files. Please try again.');
     }
   });
 
@@ -182,6 +201,72 @@ const ProjectDetail = () => {
         console.error('Error copying link:', err);
         toast.error('Failed to copy link');
       });
+  };
+
+  const handleAttachmentFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+          toast.error(`File ${file.name} is too large. Maximum size is 10MB.`);
+          continue;
+        }
+      }
+      setNewAttachmentFiles(prev => [...prev, ...files]);
+    }
+    // Reset the input value
+    if (attachmentFileInputRef.current) {
+      attachmentFileInputRef.current.value = '';
+    }
+  };
+
+  const triggerAttachmentFileSelect = () => {
+    attachmentFileInputRef.current?.click();
+  };
+
+  const removeExistingAttachment = (attachmentId: string) => {
+    setEditAttachments(prev => prev.filter(att => att.id !== attachmentId));
+  };
+
+  const removeNewAttachmentFile = (index: number) => {
+    setNewAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const startEditingAttachments = () => {
+    setEditAttachments(task?.brandDefinition.attachments || []);
+    setNewAttachmentFiles([]);
+    setEditingAttachments(true);
+  };
+
+  const cancelEditingAttachments = () => {
+    setEditingAttachments(false);
+    setEditAttachments([]);
+    setNewAttachmentFiles([]);
+  };
+
+  const saveAttachments = async () => {
+    if (!id) return;
+    
+    // Convert new files to attachments
+    const newAttachments: FileAttachment[] = [];
+    for (const file of newAttachmentFiles) {
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      
+      newAttachments.push({
+        id: Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        dataUrl
+      });
+    }
+    
+    const finalAttachments = [...editAttachments, ...newAttachments];
+    updateAttachmentsMutation.mutate({ taskId: id, attachments: finalAttachments });
   };
 
   // Render different section types
@@ -519,6 +604,164 @@ const ProjectDetail = () => {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Reference Files Card */}
+              <Card className="glass-card">
+                <CardHeader className="glass-header flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl">Reference Files</CardTitle>
+                    <CardDescription>Supporting documents and materials attached during task creation</CardDescription>
+                  </div>
+                  {!editingAttachments && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={startEditingAttachments}
+                    >
+                      <PenLine className="h-3.5 w-3.5 mr-1" />
+                      Edit
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent className="p-6">
+                  {editingAttachments ? (
+                    <div className="space-y-4">
+                      {/* Existing attachments */}
+                      {editAttachments.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-foreground mb-3">Current Files:</h4>
+                          <div className="space-y-2">
+                            {editAttachments.map((attachment) => (
+                              <div key={attachment.id} className="flex items-center gap-3 p-3 bg-accent/20 rounded-lg border border-border">
+                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                <div className="flex-1">
+                                  <span className="text-sm font-medium text-foreground">{attachment.name}</span>
+                                  <p className="text-xs text-muted-foreground">
+                                    {(attachment.size / 1024).toFixed(1)} KB
+                                  </p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeExistingAttachment(attachment.id)}
+                                  className="hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* New files to be added */}
+                      {newAttachmentFiles.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-foreground mb-3">New Files to Add:</h4>
+                          <div className="space-y-2">
+                            {newAttachmentFiles.map((file, index) => (
+                              <div key={index} className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                                <FileText className="h-4 w-4 text-primary" />
+                                <div className="flex-1">
+                                  <span className="text-sm font-medium text-foreground">{file.name}</span>
+                                  <p className="text-xs text-muted-foreground">
+                                    {(file.size / 1024).toFixed(1)} KB
+                                  </p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeNewAttachmentFile(index)}
+                                  className="hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Add files button */}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={triggerAttachmentFileSelect}
+                          className="flex items-center gap-2"
+                        >
+                          <Upload className="h-4 w-4" />
+                          Add Files
+                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={saveAttachments}
+                            disabled={updateAttachmentsMutation.isPending}
+                            size="sm"
+                          >
+                            {updateAttachmentsMutation.isPending ? 'Saving...' : 'Save Changes'}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={cancelEditingAttachments}
+                            size="sm"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Hidden file input */}
+                      <input
+                        ref={attachmentFileInputRef}
+                        type="file"
+                        multiple
+                        onChange={handleAttachmentFileSelect}
+                        accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip,.rar"
+                        style={{ display: 'none' }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {task.brandDefinition.attachments && task.brandDefinition.attachments.length > 0 ? (
+                        task.brandDefinition.attachments.map((attachment) => (
+                          <div key={attachment.id} className="flex items-center gap-3 p-3 bg-accent/20 rounded-lg border border-border">
+                            <FileText className="h-5 w-5 text-muted-foreground" />
+                            <div className="flex-1">
+                              <a 
+                                href={attachment.dataUrl} 
+                                download={attachment.name}
+                                className="text-sm font-medium text-foreground hover:text-primary transition-colors hover:underline"
+                              >
+                                {attachment.name}
+                              </a>
+                              <p className="text-xs text-muted-foreground">
+                                {(attachment.size / 1024).toFixed(1)} KB
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <FileText className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                          <p>No reference files attached</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-3"
+                            onClick={startEditingAttachments}
+                          >
+                            Add Files
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
             
             <div className="md:col-span-2 space-y-6">
@@ -557,6 +800,40 @@ const ProjectDetail = () => {
                     <div className="content-block">
                       <h4 className="text-sm font-medium text-primary mb-1">Additional Information</h4>
                       <p className="text-sm">{task.brandDefinition.additionalInfo}</p>
+                    </div>
+                  )}
+                  {task.brandDefinition.role && (
+                    <div className="content-block">
+                      <h4 className="text-sm font-medium text-primary mb-1">Role/Position</h4>
+                      <p>{task.brandDefinition.role}</p>
+                    </div>
+                  )}
+                  {task.brandDefinition.level && (
+                    <div className="content-block">
+                      <h4 className="text-sm font-medium text-primary mb-1">Experience Level</h4>
+                      <p className="capitalize">{task.brandDefinition.level}</p>
+                    </div>
+                  )}
+                  {task.brandDefinition.attachments && task.brandDefinition.attachments.length > 0 && (
+                    <div className="content-block">
+                      <h4 className="text-sm font-medium text-primary mb-2">Reference Files</h4>
+                      <div className="space-y-2">
+                        {task.brandDefinition.attachments.map((attachment) => (
+                          <div key={attachment.id} className="flex items-center gap-2 p-2 bg-accent/20 rounded-lg border border-border">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <a 
+                              href={attachment.dataUrl} 
+                              download={attachment.name}
+                              className="flex-1 text-sm hover:text-primary transition-colors hover:underline"
+                            >
+                              {attachment.name}
+                            </a>
+                            <span className="text-xs text-muted-foreground">
+                              ({(attachment.size / 1024).toFixed(1)} KB)
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </CardContent>

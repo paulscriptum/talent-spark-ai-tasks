@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ClipboardCheck, UserPlus } from "lucide-react";
+import { ClipboardCheck, UserPlus, Target } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
@@ -43,7 +43,7 @@ const Login = () => {
         <div className="flex flex-col items-center text-center">
           <div className="mb-4 flex items-center justify-center">
             <div className="bg-primary rounded-md p-2">
-              {isRegisterMode ? <UserPlus className="h-8 w-8 text-white" /> : <ClipboardCheck className="h-8 w-8 text-white" />}
+              <Target className="h-8 w-8 text-white" />
             </div>
           </div>
           <div className="text-center">

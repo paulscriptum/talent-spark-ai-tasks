@@ -8,7 +8,8 @@ import {
   Menu,
   X,
   LogOut,
-  Sparkles
+  Sparkles,
+  Target
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,7 @@ const MobileMenu = () => {
           <div className="flex flex-col h-full">
             <div className="flex items-center p-4 border-b border-border">
               <div className="bg-primary rounded-md p-1 mr-2">
-                <ClipboardCheck className="h-6 w-6 text-white" />
+                <Target className="h-6 w-6 text-white" />
               </div>
               <span className="text-lg font-semibold brand-font">testask</span>
             </div>

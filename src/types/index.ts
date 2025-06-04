@@ -24,6 +24,9 @@ export interface BrandDefinition {
   companyValues: string[];
   tone: string;
   additionalInfo?: string;
+  role: string;
+  level: 'junior' | 'middle' | 'senior';
+  attachments?: FileAttachment[];
 }
 
 export interface FileAttachment {

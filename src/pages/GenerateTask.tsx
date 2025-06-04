@@ -1,23 +1,41 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { taskService } from '../services/taskService';
-import { BrandDefinition } from '../types';
+import { BrandDefinition, FileAttachment } from '../types';
 import Layout from '../components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Building, Users, Target, Palette, MessageSquare, FileText } from 'lucide-react';
+import { 
+  Sparkles, 
+  Building, 
+  Users, 
+  Target, 
+  Palette, 
+  MessageSquare, 
+  FileText, 
+  UserCheck, 
+  TrendingUp,
+  Upload,
+  X
+} from 'lucide-react';
 
 const GenerateTask = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<BrandDefinition>({
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFiles, setSelectedFiles] = useState<FileAttachment[]>([]);
+  
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue } = useForm<BrandDefinition>({
     defaultValues: {
-      companyValues: []
+      companyValues: [],
+      level: 'middle',
+      attachments: []
     }
   });
 
@@ -26,6 +44,7 @@ const GenerateTask = () => {
     onSuccess: (task) => {
       toast.success('Task generated successfully!');
       reset();
+      setSelectedFiles([]);
       navigate(`/projects/${task.id}`);
     },
     onError: () => {
@@ -33,13 +52,57 @@ const GenerateTask = () => {
     }
   });
 
+  const convertFilesToAttachments = async (files: File[]): Promise<FileAttachment[]> => {
+    const attachments: FileAttachment[] = [];
+    
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        toast.error(`File ${file.name} is too large. Maximum size is 10MB.`);
+        continue;
+      }
+      
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      
+      attachments.push({
+        id: Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        dataUrl
+      });
+    }
+    
+    return attachments;
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const newAttachments = await convertFilesToAttachments(files);
+      setSelectedFiles(prev => [...prev, ...newAttachments]);
+    }
+  };
+
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const removeFile = (fileId: string) => {
+    setSelectedFiles(prev => prev.filter(file => file.id !== fileId));
+  };
+
   const onSubmit = async (data: BrandDefinition) => {
     // Convert comma-separated values to array
     const formattedData = {
       ...data,
       companyValues: typeof data.companyValues === 'string' 
         ? (data.companyValues as string).split(',').map(v => v.trim())
-        : data.companyValues
+        : data.companyValues,
+      attachments: selectedFiles
     };
     
     generateTaskMutation.mutate(formattedData);
@@ -74,7 +137,7 @@ const GenerateTask = () => {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">Generate Task</h1>
           <p className="text-muted-foreground mt-2 text-lg">
-            Define your brand to create AI-powered recruitment tasks tailored to your company
+            Define your brand and role requirements to create AI-powered recruitment tasks
           </p>
         </div>
         
@@ -85,16 +148,53 @@ const GenerateTask = () => {
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <CardTitle className="text-2xl">Brand Definition</CardTitle>
+                <CardTitle className="text-2xl">Task Generation</CardTitle>
                 <CardDescription className="text-base mt-1">
-                  Provide details about your brand to generate a custom recruitment task. Our AI will create 
-                  content that perfectly matches your company's identity and values.
+                  Provide details about your brand, role, and requirements to generate a custom recruitment task.
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-8">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              {/* Role and Level Section */}
+              <div className="grid gap-6 md:grid-cols-2">
+                <FormField
+                  id="role"
+                  label="Role/Position"
+                  icon={UserCheck}
+                  required
+                  error={errors.role?.message}
+                >
+                  <Input 
+                    id="role"
+                    {...register('role', { required: 'Role is required' })} 
+                    placeholder="e.g., Frontend Developer, Marketing Manager, etc."
+                    className={`form-input ${errors.role ? 'border-destructive focus:border-destructive' : ''}`}
+                  />
+                </FormField>
+                
+                <FormField
+                  id="level"
+                  label="Experience Level"
+                  icon={TrendingUp}
+                  required
+                  error={errors.level?.message}
+                >
+                  <Select onValueChange={(value) => setValue('level', value as 'junior' | 'middle' | 'senior')} defaultValue="middle">
+                    <SelectTrigger className={`form-input ${errors.level ? 'border-destructive focus:border-destructive' : ''}`}>
+                      <SelectValue placeholder="Select experience level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="junior">Junior (0-2 years)</SelectItem>
+                      <SelectItem value="middle">Middle (2-5 years)</SelectItem>
+                      <SelectItem value="senior">Senior (5+ years)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+              </div>
+
+              {/* Company Information Section */}
               <div className="grid gap-6 md:grid-cols-2">
                 <FormField
                   id="companyName"
@@ -184,6 +284,65 @@ const GenerateTask = () => {
                   rows={4}
                   className="form-input"
                 />
+              </FormField>
+
+              {/* File Attachments Section */}
+              <FormField
+                id="attachments"
+                label="Reference Files (Optional)"
+                icon={Upload}
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={triggerFileSelect}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Select Files
+                    </Button>
+                    <p className="text-sm text-muted-foreground">
+                      Upload job descriptions, company documents, or reference materials (Max 10MB per file)
+                    </p>
+                  </div>
+                  
+                  {selectedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-foreground">Attached Files:</p>
+                      {selectedFiles.map((file) => (
+                        <div key={file.id} className="flex items-center justify-between bg-accent/30 p-3 rounded-lg border border-border">
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-foreground">{file.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              ({(file.size / 1024).toFixed(1)} KB)
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFile(file.id)}
+                            className="hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileSelect}
+                    accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip,.rar"
+                    style={{ display: 'none' }}
+                  />
+                </div>
               </FormField>
               
               <div className="pt-4 border-t border-border">

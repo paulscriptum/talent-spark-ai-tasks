@@ -206,6 +206,36 @@ const CandidateSubmission = () => {
             </Card>
           )}
           
+          {task.brandDefinition.attachments && task.brandDefinition.attachments.length > 0 && (
+            <Card className="glass-card">
+              <CardHeader className="glass-header">
+                <CardTitle className="text-xl">Reference Files</CardTitle>
+                <CardDescription>Supporting documents and materials for this task</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-3">
+                  {task.brandDefinition.attachments.map((attachment) => (
+                    <div key={attachment.id} className="flex items-center gap-3 p-3 bg-accent/20 rounded-lg border border-border">
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <a 
+                          href={attachment.dataUrl} 
+                          download={attachment.name}
+                          className="text-sm font-medium text-foreground hover:text-primary transition-colors hover:underline"
+                        >
+                          {attachment.name}
+                        </a>
+                        <p className="text-xs text-muted-foreground">
+                          {(attachment.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
           <Card className="glass-card">
             <CardHeader className="glass-header">
               <CardTitle>Submit Your Response</CardTitle>

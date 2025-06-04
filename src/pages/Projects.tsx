@@ -56,7 +56,7 @@ const Projects = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {tasks?.map(task => (
-              <Card key={task.id} className="glass-card hover:shadow-md transition-shadow duration-200">
+              <Card key={task.id} className="glass-card project-card-hover">
                 <CardHeader className="glass-header">
                   <div className="flex justify-between items-start gap-3">
                     <CardTitle className="text-lg font-semibold line-clamp-2">{task.title}</CardTitle>
@@ -103,7 +103,7 @@ const Projects = () => {
                     <div className="pt-2">
                       <Button 
                         variant="default" 
-                        className="w-full btn-hover"
+                        className="w-full btn-project-hover"
                         as={Link}
                         to={`/projects/${task.id}`}
                       >

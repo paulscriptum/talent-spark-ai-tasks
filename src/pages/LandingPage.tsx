@@ -156,7 +156,7 @@ const LandingPage = () => {
               AI-Powered Recruitment Platform
             </Badge>
             <h1 className="text-5xl lg:text-7xl font-bold tracking-tight mb-8 brand-font">
-              Just assess it with{' '}
+              Create and check assignments with{' '}
               <span className="text-primary">testask</span>
             </h1>
             <p className="text-xl lg:text-2xl text-muted-foreground mb-12 leading-relaxed">

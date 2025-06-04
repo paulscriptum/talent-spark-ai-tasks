@@ -6,7 +6,8 @@ import {
   ClipboardCheck, 
   BarChart,
   LogOut,
-  Sparkles
+  Sparkles,
+  Target
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,7 @@ const Sidebar = () => {
       {/* Header */}
       <div className="flex items-center p-6 border-b border-sidebar-border">
         <div className="bg-primary rounded-xl p-2.5 mr-3 shadow-sm">
-          <Sparkles className="h-5 w-5 text-primary-foreground" />
+          <Target className="h-5 w-5 text-primary-foreground" />
         </div>
         <Link to="/" className="flex items-center gap-2">
           <span className="text-xl font-semibold text-sidebar-foreground brand-font">testask</span>
