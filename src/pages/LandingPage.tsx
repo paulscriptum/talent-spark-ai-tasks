@@ -16,8 +16,11 @@ import {
   Zap,
   Shield,
   Lightbulb,
-  TrendingUp
+  TrendingUp,
+  Building,
+  Briefcase
 } from 'lucide-react';
+import ContactSalesModal from '@/components/ContactSalesModal';
 
 const LandingPage = () => {
   const scrollToSection = (sectionId: string) => {
@@ -156,12 +159,12 @@ const LandingPage = () => {
               AI-Powered Recruitment Platform
             </Badge>
             <h1 className="text-5xl lg:text-7xl font-bold tracking-tight mb-8 brand-font">
-              Create and check assignments with{' '}
-              <span className="text-primary">testask</span>
+              Create, share and check candidate assessments{' '}
+              <br />
+              with <span className="text-primary">testask</span>
             </h1>
             <p className="text-xl lg:text-2xl text-muted-foreground mb-12 leading-relaxed">
-              The recruitment task platform loved by HR teams.
-              Create, share, and analyze candidate assessments with AI-powered intelligence.
+              A hiring platform designed to make hiring process easier. Generate smart assessments in seconds, analyze them automatically, and make confident hiring decisions with AI-driven insights.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/generate">
@@ -283,7 +286,7 @@ const LandingPage = () => {
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Free Plan */}
-            <Card className="glass-card relative">
+            <Card className="glass-card relative flex flex-col h-full">
               <CardHeader className="text-center p-8">
                 <CardTitle className="text-2xl font-bold">Starter</CardTitle>
                 <div className="mt-4">
@@ -294,8 +297,8 @@ const LandingPage = () => {
                   Perfect for individuals and small teams getting started
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-8 pt-0">
-                <ul className="space-y-3">
+              <CardContent className="p-8 pt-0 flex-grow flex flex-col">
+                <ul className="space-y-3 flex-grow">
                   <li className="flex items-center gap-3">
                     <CheckCircle className="h-5 w-5 text-green-500" />
                     <span>Up to 5 tasks per month</span>
@@ -313,16 +316,18 @@ const LandingPage = () => {
                     <span>Basic analytics</span>
                   </li>
                 </ul>
-                <Link to="/generate" className="w-full mt-8 block">
-                  <Button variant="outline" className="w-full">
-                    Get Started Free
-                  </Button>
-                </Link>
+                <div className="mt-8">
+                  <Link to="/generate" className="w-full block">
+                    <Button variant="outline" className="w-full">
+                      Get Started Free
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
 
             {/* Pro Plan */}
-            <Card className="glass-card relative border-primary/20">
+            <Card className="glass-card relative border-primary/20 flex flex-col h-full">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 <Badge className="bg-primary text-primary-foreground px-4 py-1">
                   Most Popular
@@ -338,8 +343,8 @@ const LandingPage = () => {
                   Ideal for growing teams and HR departments
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-8 pt-0">
-                <ul className="space-y-3">
+              <CardContent className="p-8 pt-0 flex-grow flex flex-col">
+                <ul className="space-y-3 flex-grow">
                   <li className="flex items-center gap-3">
                     <CheckCircle className="h-5 w-5 text-green-500" />
                     <span>Unlimited tasks</span>
@@ -365,16 +370,18 @@ const LandingPage = () => {
                     <span>Custom branding</span>
                   </li>
                 </ul>
-                <Link to="/generate" className="w-full mt-8 block">
-                  <Button className="w-full btn-ai-gradient">
-                    Start 14-day Free Trial
-                  </Button>
-                </Link>
+                <div className="mt-8">
+                  <Link to="/generate" className="w-full block">
+                    <Button className="w-full btn-ai-gradient">
+                      Start 14-day Free Trial
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
 
             {/* Enterprise Plan */}
-            <Card className="glass-card relative">
+            <Card className="glass-card relative flex flex-col h-full">
               <CardHeader className="text-center p-8">
                 <CardTitle className="text-2xl font-bold">Enterprise</CardTitle>
                 <div className="mt-4">
@@ -385,8 +392,8 @@ const LandingPage = () => {
                   For large organizations with specific requirements
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-8 pt-0">
-                <ul className="space-y-3">
+              <CardContent className="p-8 pt-0 flex-grow flex flex-col">
+                <ul className="space-y-3 flex-grow">
                   <li className="flex items-center gap-3">
                     <CheckCircle className="h-5 w-5 text-green-500" />
                     <span>Everything in Professional</span>
@@ -412,11 +419,13 @@ const LandingPage = () => {
                     <span>On-premise deployment</span>
                   </li>
                 </ul>
-                <Link to="/login" className="w-full mt-8 block">
-                  <Button variant="outline" className="w-full">
-                    Contact Sales
-                  </Button>
-                </Link>
+                <div className="mt-8">
+                  <ContactSalesModal>
+                    <Button variant="outline" className="w-full">
+                      Contact Sales
+                    </Button>
+                  </ContactSalesModal>
+                </div>
               </CardContent>
             </Card>
           </div>
