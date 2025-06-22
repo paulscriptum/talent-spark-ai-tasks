@@ -19,6 +19,7 @@ import { ArrowLeft, Clock, Check, FileText, PenLine, Link2, AlertCircle, Info, C
 import { Form, FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
 import EditSectionForm from '@/components/EditSectionForm';
 import EditDescriptionForm from '@/components/EditDescriptionForm';
+import ReactMarkdown from 'react-markdown';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -326,7 +327,9 @@ const ProjectDetail = () => {
         {icon && <div className="flex gap-2 items-center mb-2">{icon} <span className="font-semibold">{section.title}</span></div>}
         {!icon && <div className="font-semibold mb-2">{section.title}</div>}
         
-        <div className="whitespace-pre-wrap">{section.content}</div>
+        <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed">
+          <ReactMarkdown>{section.content}</ReactMarkdown>
+        </div>
         
         {/* Edit button for all sections */}
         <div className="flex justify-end mt-4">
@@ -459,7 +462,9 @@ const ProjectDetail = () => {
                       />
                     ) : (
                       <div className="task-content-block mb-6">
-                        {task.description}
+                        <p className="text-muted-foreground leading-relaxed">
+                          <ReactMarkdown>{task.description}</ReactMarkdown>
+                        </p>
                         <div className="flex justify-end mt-4">
                           <Button 
                             variant="ghost" 

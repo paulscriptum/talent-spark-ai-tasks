@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Send, Upload, FileText, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { TaskResponse, FileAttachment } from '@/types';
+import ReactMarkdown from 'react-markdown';
 
 const CandidateSubmission = () => {
   const { id } = useParams<{ id: string }>();
@@ -170,7 +171,9 @@ const CandidateSubmission = () => {
               <CardTitle className="text-xl">Task Description</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <p className="whitespace-pre-wrap leading-relaxed">{task.description}</p>
+              <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed">
+                <ReactMarkdown>{task.description}</ReactMarkdown>
+              </div>
             </CardContent>
           </Card>
           
@@ -183,7 +186,9 @@ const CandidateSubmission = () => {
                 {task.sections?.filter(section => section.type === 'requirements').map((section) => (
                   <div key={section.id} className="mb-4 last:mb-0">
                     <h3 className="font-semibold mb-3 text-foreground">{section.title}</h3>
-                    <p className="whitespace-pre-wrap leading-relaxed text-foreground/90">{section.content}</p>
+                    <div className="prose prose-sm max-w-none text-foreground/90 leading-relaxed">
+                      <ReactMarkdown>{section.content}</ReactMarkdown>
+                    </div>
                   </div>
                 ))}
               </CardContent>
@@ -199,7 +204,9 @@ const CandidateSubmission = () => {
                 {task.sections?.filter(section => section.type === 'deliverables').map((section) => (
                   <div key={section.id} className="mb-4 last:mb-0">
                     <h3 className="font-semibold mb-3 text-foreground">{section.title}</h3>
-                    <p className="whitespace-pre-wrap leading-relaxed text-foreground/90">{section.content}</p>
+                    <div className="prose prose-sm max-w-none text-foreground/90 leading-relaxed">
+                      <ReactMarkdown>{section.content}</ReactMarkdown>
+                    </div>
                   </div>
                 ))}
               </CardContent>

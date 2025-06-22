@@ -1,65 +1,50 @@
+import {
+  collection,
+  doc,
+  addDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  arrayUnion,
+  query,
+  orderBy,
+  serverTimestamp,
+  Timestamp,
+  FieldValue,
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../lib/firebase'; // Import from our new firebase config
 import { Task, BrandDefinition, TaskResponse, AiAnalysis, DashboardStats, TaskSection, FileAttachment } from '../types';
 
 // Local storage key for tasks
-const TASKS_STORAGE_KEY = 'assessment_tasks';
+// const TASKS_STORAGE_KEY = 'assessment_tasks';
 
 // Load tasks from localStorage or use empty array if not found
-let tasks: Task[] = loadTasks();
+// let tasks: Task[] = loadTasks();
 
 // Function to load tasks from localStorage
-function loadTasks(): Task[] {
-  if (typeof window === 'undefined') return [];
-  
-  try {
-    const storedTasks = localStorage.getItem(TASKS_STORAGE_KEY);
-    return storedTasks ? JSON.parse(storedTasks) : [];
-  } catch (error) {
-    console.error('Error loading tasks from localStorage:', error);
-    return [];
-  }
-}
+// function loadTasks(): Task[] {
+//   if (typeof window === 'undefined') return [];
+//   
+//   try {
+//     const storedTasks = localStorage.getItem(TASKS_STORAGE_KEY);
+//     return storedTasks ? JSON.parse(storedTasks) : [];
+//   } catch (error) {
+//     console.error('Error loading tasks from localStorage:', error);
+//     return [];
+//   }
+// }
 
 // Function to save tasks to localStorage
-function saveTasks() {
-  if (typeof window === 'undefined') return;
-  
-  try {
-    localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
-  } catch (error) {
-    console.error('Error saving tasks to localStorage:', error);
-  }
-}
-
-// Statistics will be calculated from the actual tasks
-const getDashboardStats = (): DashboardStats => {
-  const activeTasks = tasks.filter(task => task.status === 'active').length;
-  const completedTasks = tasks.filter(task => task.status === 'completed').length;
-  
-  // Calculate total candidates from responses
-  const totalCandidates = tasks.reduce((total, task) => total + task.responses.length, 0);
-  
-  // Calculate average score if there are responses with AI analysis
-  let totalScore = 0;
-  let scoreCount = 0;
-  
-  tasks.forEach(task => {
-    task.responses.forEach(response => {
-      if (response.aiAnalysis) {
-        totalScore += response.aiAnalysis.overallScore;
-        scoreCount++;
-      }
-    });
-  });
-  
-  const averageScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
-  
-  return {
-    activeTasks,
-    completedTasks,
-    totalCandidates,
-    averageScore
-  };
-};
+// function saveTasks() {
+//   if (typeof window === 'undefined') return;
+//   
+//   try {
+//     localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+//   } catch (error) {
+//     console.error('Error saving tasks to localStorage:', error);
+//   }
+// }
 
 // OpenAI API configuration
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -95,6 +80,76 @@ const callOpenAI = async (messages: Array<{ role: string, content: string }>) =>
     return data.choices[0].message.content;
   } catch (error) {
     console.error('Error calling OpenAI:', error);
+    throw error;
+  }
+};
+
+// Helper function to upload files to Firebase Storage
+const uploadAttachments = async (attachments: FileAttachment[], taskId: string): Promise<FileAttachment[]> => {
+  const uploadPromises = attachments.map(async (attachment) => {
+    // We need to convert dataUrl back to a Blob to upload
+    const response = await fetch(attachment.dataUrl);
+    const blob = await response.blob();
+    const storageRef = ref(storage, `tasks/${taskId}/submissions/${attachment.name}_${Date.now()}`);
+    
+    const snapshot = await uploadBytes(storageRef, blob);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    // Return a new object with the downloadURL, keeping other info
+    return {
+      ...attachment,
+      dataUrl: downloadURL, // Replace dataUrl with the permanent download URL
+    };
+  });
+
+  return Promise.all(uploadPromises);
+};
+
+// Helper function to analyze image content using vision capabilities
+const analyzeImageContent = async (attachment: FileAttachment): Promise<string> => {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured');
+  }
+
+  try {
+    const response = await fetch(OPENAI_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: 'Analyze this image in the context of a job assessment submission. Describe what you see, including any text, diagrams, charts, screenshots, or other relevant content. Focus on whether this appears to be substantial work (like mockups, designs, analysis) or just random screenshots.'
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: attachment.dataUrl
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 500
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Vision API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error('Error analyzing image:', error);
     throw error;
   }
 };
@@ -182,87 +237,88 @@ ERROR: Could not analyze file content - ${error.message}
   return contentAnalysis.join('\n');
 };
 
-// Helper function to analyze image content using vision capabilities
-const analyzeImageContent = async (attachment: FileAttachment): Promise<string> => {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error('OpenAI API key not configured');
-  }
-
-  try {
-    const response = await fetch(OPENAI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Analyze this image in the context of a job assessment submission. Describe what you see, including any text, diagrams, charts, screenshots, or other relevant content. Focus on whether this appears to be substantial work (like mockups, designs, analysis) or just random screenshots.'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: attachment.dataUrl
-                }
-              }
-            ]
-          }
-        ],
-        max_tokens: 500
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Vision API Error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
-  } catch (error) {
-    console.error('Error analyzing image:', error);
-    throw error;
-  }
-};
-
 // API service functions
 export const taskService = {
   getDashboardStats: async (): Promise<DashboardStats> => {
-    return getDashboardStats();
+    const tasksSnapshot = await getDocs(collection(db, 'tasks'));
+    const tasks = tasksSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Task));
+    
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const activeTasks = tasks.length - completedTasks;
+    
+    const totalResponses = tasks.reduce((acc, task) => acc + (task.responses?.length || 0), 0);
+    
+    let totalScore = 0;
+    let scoreCount = 0;
+   
+    tasks.forEach(task => {
+     (task.responses || []).forEach(response => {
+       if (response.aiAnalysis) {
+         totalScore += response.aiAnalysis.overallScore;
+         scoreCount++;
+       }
+     });
+    });
+   
+    const averageScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
+
+    return {
+      activeTasks,
+      completedTasks,
+      totalCandidates: totalResponses,
+      averageScore,
+    };
   },
 
   getAllTasks: async (): Promise<Task[]> => {
+    const tasksCol = collection(db, 'tasks');
+    const q = query(tasksCol, orderBy('createdAt', 'desc'));
+    const tasksSnapshot = await getDocs(q);
+    const tasks = tasksSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        createdAt: (data.createdAt as Timestamp)?.toDate().toISOString(),
+        deadline: (data.deadline as Timestamp)?.toDate().toISOString(),
+      } as Task;
+    });
     return tasks;
   },
 
   getTaskById: async (id: string): Promise<Task | undefined> => {
-    return tasks.find(task => task.id === id);
+    if (!id) return undefined;
+    const taskDocRef = doc(db, 'tasks', id);
+    const taskSnap = await getDoc(taskDocRef);
+
+    if (!taskSnap.exists()) {
+      return undefined;
+    }
+    
+    const data = taskSnap.data();
+    return {
+      ...data,
+      id: taskSnap.id,
+      createdAt: (data.createdAt as Timestamp)?.toDate().toISOString(),
+      deadline: (data.deadline as Timestamp)?.toDate().toISOString(),
+    } as Task;
   },
 
   getTaskByIdForCandidate: async (id: string): Promise<Task | undefined> => {
-    // Return a task with limited information for candidates
-    const task = tasks.find(task => task.id === id);
+    const task = await taskService.getTaskById(id);
     if (!task) return undefined;
     
-    // Only return necessary information, not responses
     return {
       ...task,
-      responses: [] // Don't expose other candidates' responses
+      responses: []
     };
   },
 
   generateTask: async (brandDefinition: BrandDefinition): Promise<Task> => {
-    // Prepare prompt for task generation
     const messages = [
       { 
         role: 'system', 
-        content: 'You are an expert in creating realistic technical assessment tasks for job candidates. You\'ll create a detailed task description based on the provided brand information. Include clear requirements, deliverables, and evaluation criteria. Format your response as JSON with the following structure: {"title": "Task Title", "description": "Main task description", "sections": [{"title": "Requirements Title", "content": "Detailed requirements", "type": "requirements"}, {"title": "Deliverables Title", "content": "Expected deliverables", "type": "deliverables"}, {"title": "Evaluation Criteria", "content": "How submissions will be evaluated", "type": "evaluation"}, {"title": "Additional Notes", "content": "Any extra information", "type": "note"}]}' 
+        content: 'You are an expert in creating realistic technical assessment tasks for job candidates. Based on the provided brand information, generate a complete and detailed task. Your response MUST be a single JSON object with the following structure: {"title": "A creative and relevant task title", "description": "A 2-3 sentence overview of the task", "sections": [{"title": "Requirements", "content": "Generate detailed, specific, and actionable requirements for the candidate here.", "type": "requirements"}, {"title": "Deliverables", "content": "Generate a list of specific files, documents, or outputs the candidate must provide here.", "type": "deliverables"}, {"title": "Evaluation Criteria", "content": "Generate the criteria by which the submission will be judged here.", "type": "evaluation"}, {"title": "Additional Notes", "content": "Generate any helpful hints, context, or extra information for the candidate here. If none, write a brief, encouraging note.", "type": "note"}]}. Do not include any text outside of this JSON object.' 
       },
       {
         role: 'user',
@@ -282,7 +338,6 @@ export const taskService = {
       const aiResponse = await callOpenAI(messages);
       const parsedResponse = JSON.parse(aiResponse);
       
-      // Ensure a "note" section exists
       const hasNoteSection = parsedResponse.sections?.some((s: any) => s.type === 'note');
       if (!hasNoteSection) {
         if (!parsedResponse.sections) parsedResponse.sections = [];
@@ -293,158 +348,106 @@ export const taskService = {
         });
       }
 
-      // Create a new task with generated content
-      const newTask: Task = {
-        id: `task-${Date.now()}`,
-        title: parsedResponse.title,
-        description: parsedResponse.description,
+      const newTaskData = {
+        ...parsedResponse,
         status: 'active',
-        createdAt: new Date().toISOString(),
-        deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 2 weeks from now
+        createdAt: serverTimestamp(),
+        deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         brandDefinition,
         responses: [],
-        sections: parsedResponse.sections.map((section: any, index: number) => ({
-          id: `section-${Date.now()}-${index}`,
-          title: section.title,
-          content: section.content,
-          type: section.type
-        }))
       };
       
-      tasks.unshift(newTask);
-      // Save tasks to localStorage after adding a new one
-      saveTasks();
-      return newTask;
+      const docRef = await addDoc(collection(db, "tasks"), newTaskData);
+      
+      return {
+        ...newTaskData,
+        id: docRef.id,
+        createdAt: new Date().toISOString(),
+        deadline: newTaskData.deadline.toISOString(),
+      } as Task;
+
     } catch (error) {
       console.error('Error generating task:', error);
-      // Fallback to a basic task in case of error
-      const newTask: Task = {
-        id: `task-${Date.now()}`,
-        title: `${brandDefinition.companyName} Assessment Task`,
-        description: `This is an assessment task for ${brandDefinition.companyName} in the ${brandDefinition.industry} industry.`,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-        brandDefinition,
-        responses: [],
-        sections: [
-          {
-            id: `section-${Date.now()}-1`,
-            title: 'Task Requirements',
-            content: 'Please complete the specified requirements.',
-            type: 'requirements'
-          },
-          {
-            id: `section-${Date.now()}-2`,
-            title: 'Deliverables',
-            content: 'Submit all requested deliverables.',
-            type: 'deliverables'
-          },
-          {
-            id: `section-${Date.now()}-3`,
-            title: 'Evaluation Criteria',
-            content: 'Submissions will be evaluated based on quality and alignment with requirements.',
-            type: 'evaluation'
-          },
-          {
-            id: `section-${Date.now()}-4`,
-            title: 'Additional Notes',
-            content: 'Place additional notes here.',
-            type: 'note'
-          }
-        ]
-      };
-      
-      tasks.unshift(newTask);
-      // Save tasks to localStorage after adding a new one
-      saveTasks();
-      return newTask;
-    }
-  },
-
-  generateSectionContentWithAI: async (taskId: string, sectionId: string): Promise<TaskSection | null> => {
-    const task = tasks.find(t => t.id === taskId);
-    if (!task || !task.brandDefinition || !task.sections) {
-      console.error('Task, brand definition, or sections not found for AI generation.');
-      return null;
-    }
-
-    const section = task.sections.find(s => s.id === sectionId);
-    if (!section) {
-      console.error('Section not found for AI generation.');
-      return null;
-    }
-
-    const sectionTypeUserFriendly = section.type.charAt(0).toUpperCase() + section.type.slice(1);
-
-    const messages = [
-      {
-        role: 'system',
-        content: `You are an expert in creating content for technical assessment tasks. Given the brand information and a specific section type (e.g., Requirements, Deliverables, Evaluation Criteria, Note), generate concise and relevant content for that section. Only return the text content for the section, not any titles or JSON structure.`
-      },
-      {
-        role: 'user',
-        content: `Generate the content for the "${sectionTypeUserFriendly}" section of an assessment task. 
-        The task is for a company with the following details:
-        Company Name: ${task.brandDefinition.companyName}
-        Industry: ${task.brandDefinition.industry}
-        Target Audience: ${task.brandDefinition.targetAudience}
-        Company Values: ${task.brandDefinition.companyValues.join(', ')}
-        Communication Tone: ${task.brandDefinition.tone}
-        ${task.brandDefinition.additionalInfo ? `Additional Information: ${task.brandDefinition.additionalInfo}` : ''}
-        Task Title: ${task.title}
-        Task Description: ${task.description}
-
-        Focus on creating specific and actionable content for the "${sectionTypeUserFriendly}" section. For example, if generating Requirements, list specific technical or functional requirements. If generating Deliverables, list the expected outputs.`
-      }
-    ];
-
-    try {
-      const aiResponse = await callOpenAI(messages);
-      // Assuming aiResponse is the plain text content for the section
-      const newContent = aiResponse.trim();
-
-      // Update the specific section
-      const taskIndex = tasks.findIndex(t => t.id === taskId);
-      if (taskIndex === -1) return null;
-
-      const sectionIndex = tasks[taskIndex].sections?.findIndex(s => s.id === sectionId);
-      if (sectionIndex === undefined || sectionIndex === -1) return null;
-
-      tasks[taskIndex].sections![sectionIndex].content = newContent;
-      saveTasks();
-      return tasks[taskIndex].sections![sectionIndex];
-
-    } catch (error) {
-      console.error(`Error generating content for section ${sectionId}:`, error);
-      throw error; // Re-throw to be caught by useMutation
+      throw new Error('Failed to generate task with AI.');
     }
   },
 
   submitResponse: async (taskId: string, response: Omit<TaskResponse, 'id' | 'submittedAt' | 'aiAnalysis'>): Promise<TaskResponse> => {
-    const task = tasks.find(task => task.id === taskId);
-    if (!task) throw new Error("Task not found");
+    const taskDocRef = doc(db, 'tasks', taskId);
+    const taskSnap = await getDoc(taskDocRef);
+    if (!taskSnap.exists()) throw new Error("Task not found");
+
+    const uploadedAttachments = response.attachments 
+      ? await uploadAttachments(response.attachments, taskId)
+      : [];
     
-    const newResponse: TaskResponse = {
+    const newResponseData = {
       ...response,
+      attachments: uploadedAttachments,
       id: `response-${Date.now()}`,
-      submittedAt: new Date().toISOString()
+      submittedAt: serverTimestamp(),
+    };
+
+    const aiAnalysis = await taskService.analyzeResponse(taskId, { 
+      ...newResponseData,
+      submittedAt: new Date().toISOString() // Use a temporary date for analysis
+    } as TaskResponse);
+    
+    const finalResponse = {
+      ...newResponseData,
+      aiAnalysis,
     };
     
-    // Analyze the response using AI
-    const aiAnalysis = await taskService.analyzeResponse(taskId, newResponse);
-    newResponse.aiAnalysis = aiAnalysis;
+    const existingResponses = taskSnap.data().responses || [];
+    await updateDoc(taskDocRef, {
+      responses: [...existingResponses, finalResponse]
+    });
     
-    // Add the response to the task
-    task.responses.push(newResponse);
-    // Save tasks to localStorage after adding a response
-    saveTasks();
-    
-    return newResponse;
+    // For the return value, we convert the FieldValue to a string
+    return {
+      ...finalResponse,
+      submittedAt: new Date().toISOString(),
+    } as unknown as TaskResponse;
+  },
+  
+  updateTaskSection: async (taskId: string, sectionId: string, content: string): Promise<void> => {
+    const taskDocRef = doc(db, 'tasks', taskId);
+    const taskSnap = await getDoc(taskDocRef);
+    if (!taskSnap.exists()) return;
+
+    const task = taskSnap.data() as Task;
+    const updatedSections = (task.sections || []).map(section => 
+      section.id === sectionId ? { ...section, content } : section
+    );
+
+    await updateDoc(taskDocRef, { sections: updatedSections });
+  },
+  
+  updateTaskDescription: async (taskId: string, description: string): Promise<void> => {
+    const taskDocRef = doc(db, 'tasks', taskId);
+    await updateDoc(taskDocRef, { description });
+  },
+  
+  markTaskComplete: async (taskId: string): Promise<void> => {
+    const taskDocRef = doc(db, 'tasks', taskId);
+    await updateDoc(taskDocRef, { status: 'completed' });
   },
 
+  markTaskUncomplete: async (taskId:string): Promise<void> => {
+    const taskDocRef = doc(db, 'tasks', taskId);
+    await updateDoc(taskDocRef, { status: 'active' });
+  },
+  
+  // This function is tricky. It's updating the brand definition, which is a nested object.
+  // Firestore requires using dot notation for this.
+  updateTaskAttachments: async (taskId: string, attachments: FileAttachment[]): Promise<void> => {
+    const taskDocRef = doc(db, 'tasks', taskId);
+    // Assuming attachments are part of brandDefinition
+    await updateDoc(taskDocRef, { 'brandDefinition.attachments': attachments });
+  },
+  
   analyzeResponse: async (taskId: string, response: TaskResponse): Promise<AiAnalysis> => {
-    const task = tasks.find(task => task.id === taskId);
+    const task = await taskService.getTaskById(taskId);
     if (!task) throw new Error("Task not found");
     
     // Calculate word count and attachment metrics
@@ -694,57 +697,60 @@ IMPORTANT: Do not penalize for brief text if substantial, relevant files are pro
     }
   },
 
-  updateTaskSection: async (taskId: string, sectionId: string, content: string): Promise<void> => {
-    const taskIndex = tasks.findIndex(task => task.id === taskId);
-    if (taskIndex === -1) return;
-
-    const task = tasks[taskIndex];
-    if (!task.sections) {
-      task.sections = [];
+  generateSectionContentWithAI: async (taskId: string, sectionId: string): Promise<TaskSection | null> => {
+    const task = await taskService.getTaskById(taskId);
+    if (!task || !task.brandDefinition || !task.sections) {
+      console.error('Task, brand definition, or sections not found for AI generation.');
+      return null;
     }
 
-    const sectionIndex = task.sections.findIndex(section => section.id === sectionId);
-    if (sectionIndex === -1) return;
+    const section = task.sections.find(s => s.id === sectionId);
+    if (!section) {
+      console.error('Section not found for AI generation.');
+      return null;
+    }
 
-    task.sections[sectionIndex].content = content;
-    // Save tasks to localStorage after updating a section
-    saveTasks();
+    const sectionTypeUserFriendly = section.type.charAt(0).toUpperCase() + section.type.slice(1);
+
+    const messages = [
+      {
+        role: 'system',
+        content: `You are an expert in creating content for technical assessment tasks. Given the brand information and a specific section type (e.g., Requirements, Deliverables, Evaluation Criteria, Note), generate concise and relevant content for that section. Only return the text content for the section, not any titles or JSON structure.`
+      },
+      {
+        role: 'user',
+        content: `Generate the content for the "${sectionTypeUserFriendly}" section of an assessment task. 
+        The task is for a company with the following details:
+        Company Name: ${task.brandDefinition.companyName}
+        Industry: ${task.brandDefinition.industry}
+        Target Audience: ${task.brandDefinition.targetAudience}
+        Company Values: ${task.brandDefinition.companyValues.join(', ')}
+        Communication Tone: ${task.brandDefinition.tone}
+        ${task.brandDefinition.additionalInfo ? `Additional Information: ${task.brandDefinition.additionalInfo}` : ''}
+        Task Title: ${task.title}
+        Task Description: ${task.description}
+
+        Focus on creating specific and actionable content for the "${sectionTypeUserFriendly}" section. For example, if generating Requirements, list specific technical or functional requirements. If generating Deliverables, list the expected outputs.`
+      }
+    ];
+
+    try {
+      const aiResponse = await callOpenAI(messages);
+      const newContent = aiResponse.trim();
+
+      // Update the specific section in Firestore
+      const updatedSections = task.sections.map(s => 
+        s.id === sectionId ? { ...s, content: newContent } : s
+      );
+      
+      await updateDoc(doc(db, 'tasks', taskId), { sections: updatedSections });
+      
+      const updatedSection = updatedSections.find(s => s.id === sectionId);
+      return updatedSection || null;
+
+    } catch (error) {
+      console.error(`Error generating content for section ${sectionId}:`, error);
+      throw error;
+    }
   },
-  
-  // Add the new updateTaskDescription function
-  updateTaskDescription: async (taskId: string, description: string): Promise<void> => {
-    const taskIndex = tasks.findIndex(task => task.id === taskId);
-    if (taskIndex === -1) return;
-
-    tasks[taskIndex].description = description;
-    // Save tasks to localStorage after updating the description
-    saveTasks();
-  },
-  
-  markTaskComplete: async (taskId: string): Promise<void> => {
-    const taskIndex = tasks.findIndex(task => task.id === taskId);
-    if (taskIndex === -1) return;
-
-    tasks[taskIndex].status = 'completed';
-    // Save tasks to localStorage after marking a task as complete
-    saveTasks();
-  },
-
-  markTaskUncomplete: async (taskId: string): Promise<void> => {
-    const taskIndex = tasks.findIndex(task => task.id === taskId);
-    if (taskIndex === -1) return;
-
-    tasks[taskIndex].status = 'active';
-    // Save tasks to localStorage after marking a task as uncomplete
-    saveTasks();
-  },
-
-  updateTaskAttachments: async (taskId: string, attachments: FileAttachment[]): Promise<void> => {
-    const taskIndex = tasks.findIndex(task => task.id === taskId);
-    if (taskIndex === -1) return;
-
-    tasks[taskIndex].brandDefinition.attachments = attachments;
-    // Save tasks to localStorage after updating attachments
-    saveTasks();
-  }
 };
