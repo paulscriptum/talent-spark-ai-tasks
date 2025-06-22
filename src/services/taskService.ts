@@ -306,14 +306,10 @@ export const taskService = {
   },
 
   getAllTasks: async (): Promise<Task[]> => {
-    const user = auth.currentUser;
-    if (!user) {
-      console.log("No user logged in, returning empty array for tasks.");
-      return [];
-    }
-
+    // Reverting to a simpler query to fetch all tasks for now.
+    // This will be updated later with proper user-based filtering.
     const tasksCol = collection(db, 'tasks');
-    const q = query(tasksCol, where("userId", "==", user.uid), orderBy('createdAt', 'desc'));
+    const q = query(tasksCol, orderBy('createdAt', 'desc'));
     const tasksSnapshot = await getDocs(q);
     const tasks = tasksSnapshot.docs.map(doc => {
       const data = doc.data();
@@ -431,6 +427,8 @@ export const taskService = {
         userId: auth.currentUser?.uid || 'anonymous',
       };
       
+      console.log('--- DEBUG: Saving new task with userId:', newTaskData.userId, '---');
+
       const docRef = await addDoc(collection(db, "tasks"), newTaskData);
       
       return {
@@ -475,23 +473,40 @@ export const taskService = {
       ...response,
       attachments: uploadedAttachments,
       id: `response-${Date.now()}`,
-      submittedAt: serverTimestamp(),
+      submittedAt: new Date().toISOString(),
     };
 
-    const aiAnalysis = await taskService.analyzeResponse(taskId, { 
-      ...newResponseData,
-      submittedAt: new Date().toISOString() // Use a temporary date for analysis
-    } as TaskResponse);
+    let aiAnalysis: AiAnalysis | undefined = undefined;
+    try {
+      console.log('Attempting to analyze response with AI...');
+      aiAnalysis = await taskService.analyzeResponse(taskId, { 
+        ...newResponseData,
+        submittedAt: new Date().toISOString() // Use a temporary date for analysis
+      } as TaskResponse);
+      console.log('AI Analysis successful.');
+    } catch (error) {
+      console.error('AI analysis failed, but saving response anyway. Error:', error);
+    }
     
     const finalResponse = {
       ...newResponseData,
-      aiAnalysis,
+      aiAnalysis, // This will be undefined if the analysis failed
     };
     
-    const existingResponses = taskSnap.data().responses || [];
-    await updateDoc(taskDocRef, {
-      responses: [...existingResponses, finalResponse]
-    });
+    try {
+      console.log("Attempting to save final response to Firestore...");
+      const existingResponses = taskSnap.data().responses || [];
+      await updateDoc(taskDocRef, {
+        responses: [...existingResponses, finalResponse]
+      });
+      console.log("Successfully saved response to Firestore.");
+    } catch (error) {
+      console.error("!!! FAILED to save response to Firestore !!!", error);
+      console.error("--- Data that failed to save ---");
+      console.error(JSON.stringify(finalResponse, null, 2));
+      console.error("--- End of data ---");
+      throw error; // Re-throw the error so the UI knows it failed
+    }
     
     // For the return value, we convert the FieldValue to a string
     return {
