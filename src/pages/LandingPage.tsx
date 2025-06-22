@@ -21,8 +21,11 @@ import {
   Briefcase
 } from 'lucide-react';
 import ContactSalesModal from '@/components/ContactSalesModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LandingPage = () => {
+  const { isLoggedIn } = useAuth();
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -136,15 +139,23 @@ const LandingPage = () => {
               </div>
             </nav>
             <div className="flex items-center gap-4">
-              <Link to="/login">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
-              <Link to="/generate">
-                <Button className="btn-ai-gradient">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Start Free
-                </Button>
-              </Link>
+              {isLoggedIn ? (
+                <Link to="/dashboard">
+                  <Button variant="ghost">Dashboard</Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <Button variant="ghost">Sign In</Button>
+                  </Link>
+                  <Link to="/generate">
+                    <Button className="btn-ai-gradient">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Start Free
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

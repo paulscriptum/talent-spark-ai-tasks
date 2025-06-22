@@ -8,7 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import GenerateTask from "./pages/GenerateTask";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
-import CandidateSubmission from "./pages/CandidateSubmission";
+import PublicTaskPage from "./pages/PublicTaskPage";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import LandingPage from "./pages/LandingPage";
@@ -46,7 +46,7 @@ const AuthenticatedApp = () => {
       <Route path="/generate" element={<ProtectedRoute><GenerateTask /></ProtectedRoute>} />
       <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
       <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
-      <Route path="/tasks/:id/submit" element={<ProtectedRoute><CandidateSubmission /></ProtectedRoute>} />
+      <Route path="/tasks/:id/submit" element={<PublicTaskPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

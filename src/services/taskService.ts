@@ -11,9 +11,10 @@ import {
   serverTimestamp,
   Timestamp,
   FieldValue,
+  where,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../lib/firebase'; // Import from our new firebase config
+import { db, storage, auth } from '../lib/firebase'; // Import from our new firebase config and auth
 import { Task, BrandDefinition, TaskResponse, AiAnalysis, DashboardStats, TaskSection, FileAttachment } from '../types';
 
 // Local storage key for tasks
@@ -53,9 +54,12 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const callOpenAI = async (messages: Array<{ role: string, content: string }>) => {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (!apiKey) {
-    console.error('OpenAI API key not found. Make sure VITE_OPENAI_API_KEY is set in your .env file.');
+    console.error('OpenAI API key not found. Make sure VITE_OPENAI_API_KEY is set in your .env file and the app is rebuilt.');
     throw new Error('OpenAI API key not configured');
+  } else {
+    console.log('OpenAI API Key loaded. Starts with:', apiKey.substring(0, 5), 'Ends with:', apiKey.substring(apiKey.length - 4));
   }
+  
   try {
     const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
@@ -66,22 +70,53 @@ const callOpenAI = async (messages: Array<{ role: string, content: string }>) =>
       body: JSON.stringify({
         model: 'gpt-4o',
         messages,
-        temperature: 0.7
+        temperature: 0.7,
+        response_format: { "type": "json_object" }
       })
     });
 
+    const responseText = await response.text();
+    console.log('Raw response from OpenAI API:', responseText);
+    console.log('Response status:', response.status);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API Error:', errorData);
-      throw new Error(`API Error: ${response.status}`);
+        console.error('OpenAI API Error: Status was not OK.', { status: response.status });
+        throw new Error(`API Error: ${response.status}. Body: ${responseText}`);
     }
 
-    const data = await response.json();
+    const data = JSON.parse(responseText);
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        console.error('Invalid JSON structure from OpenAI:', data);
+        throw new Error('Invalid response structure from OpenAI.');
+    }
+
     return data.choices[0].message.content;
+
   } catch (error) {
-    console.error('Error calling OpenAI:', error);
+    console.error('Error in callOpenAI function:', error);
     throw error;
   }
+};
+
+// Helper function to upload BRAND LOGOS to Firebase Storage
+const uploadBrandAttachments = async (attachments: FileAttachment[]): Promise<FileAttachment[]> => {
+  const uploadPromises = attachments.map(async (attachment) => {
+    const response = await fetch(attachment.dataUrl);
+    const blob = await response.blob();
+    // Use a path specific to brand assets, including the "submissions" folder to match security rules
+    const storageRef = ref(storage, `brand_logos/submissions/${attachment.name}_${Date.now()}`);
+    
+    const snapshot = await uploadBytes(storageRef, blob);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    return {
+      ...attachment,
+      dataUrl: downloadURL,
+    };
+  });
+
+  return Promise.all(uploadPromises);
 };
 
 // Helper function to upload files to Firebase Storage
@@ -271,8 +306,14 @@ export const taskService = {
   },
 
   getAllTasks: async (): Promise<Task[]> => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log("No user logged in, returning empty array for tasks.");
+      return [];
+    }
+
     const tasksCol = collection(db, 'tasks');
-    const q = query(tasksCol, orderBy('createdAt', 'desc'));
+    const q = query(tasksCol, where("userId", "==", user.uid), orderBy('createdAt', 'desc'));
     const tasksSnapshot = await getDocs(q);
     const tasks = tasksSnapshot.docs.map(doc => {
       const data = doc.data();
@@ -315,10 +356,25 @@ export const taskService = {
   },
 
   generateTask: async (brandDefinition: BrandDefinition): Promise<Task> => {
+    
+    // Step 1: Handle file attachments FIRST.
+    // Create a deep copy to modify, ensuring the original object is untouched.
+    const brandDefinitionForFirestore = JSON.parse(JSON.stringify(brandDefinition));
+
+    // Check for attachments and upload them.
+    if (brandDefinition.attachments && brandDefinition.attachments.length > 0) {
+      console.log('Found brand attachments, uploading to Firebase Storage...');
+      // The attachments property on the original brandDefinition contains the File object.
+      const uploadedAttachments = await uploadBrandAttachments(brandDefinition.attachments);
+      // Replace the attachments on our copy with the versions that have storage URLs.
+      brandDefinitionForFirestore.attachments = uploadedAttachments;
+      console.log('Brand attachments uploaded successfully.');
+    }
+
     const messages = [
       { 
         role: 'system', 
-        content: 'You are an expert in creating realistic technical assessment tasks for job candidates. Based on the provided brand information, generate a complete and detailed task. Your response MUST be a single JSON object with the following structure: {"title": "A creative and relevant task title", "description": "A 2-3 sentence overview of the task", "sections": [{"title": "Requirements", "content": "Generate detailed, specific, and actionable requirements for the candidate here.", "type": "requirements"}, {"title": "Deliverables", "content": "Generate a list of specific files, documents, or outputs the candidate must provide here.", "type": "deliverables"}, {"title": "Evaluation Criteria", "content": "Generate the criteria by which the submission will be judged here.", "type": "evaluation"}, {"title": "Additional Notes", "content": "Generate any helpful hints, context, or extra information for the candidate here. If none, write a brief, encouraging note.", "type": "note"}]}. Do not include any text outside of this JSON object.' 
+        content: 'You are an expert in creating realistic technical assessment tasks. Generate a task as a single JSON object. The JSON object should have keys: "title", "description", and "sections". "sections" should be an array of objects, each with "title", "content", and "type". The types should be "requirements", "deliverables", "evaluation", and "note".' 
       },
       {
         role: 'user',
@@ -335,8 +391,21 @@ export const taskService = {
     ];
 
     try {
-      const aiResponse = await callOpenAI(messages);
+      console.log("Attempting to generate task with AI...");
+      let aiResponse = await callOpenAI(messages);
+      console.log("AI Response received:", aiResponse);
+      
+// Clean the response to remove markdown code block formatting
+    if (aiResponse.startsWith('```json')) {
+      aiResponse = aiResponse.substring(7);
+      if (aiResponse.endsWith('```')) {
+        aiResponse = aiResponse.slice(0, -3);
+      }
+    }
+    aiResponse = aiResponse.trim();
+      
       const parsedResponse = JSON.parse(aiResponse);
+      console.log("Parsed AI Response:", parsedResponse);
       
       const hasNoteSection = parsedResponse.sections?.some((s: any) => s.type === 'note');
       if (!hasNoteSection) {
@@ -348,13 +417,18 @@ export const taskService = {
         });
       }
 
+      console.log('--- DEBUG: BrandDefinition before Firestore ---');
+      console.log(JSON.stringify(brandDefinition, null, 2));
+      console.log('--- END DEBUG ---');
+
       const newTaskData = {
         ...parsedResponse,
         status: 'active',
         createdAt: serverTimestamp(),
         deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-        brandDefinition,
+        brandDefinition: brandDefinitionForFirestore,
         responses: [],
+        userId: auth.currentUser?.uid || 'anonymous',
       };
       
       const docRef = await addDoc(collection(db, "tasks"), newTaskData);
@@ -367,6 +441,22 @@ export const taskService = {
       } as Task;
 
     } catch (error) {
+      console.error('Error in generateTask function:', error);
+      if (error.message.includes('nested')) {
+        console.error('--- DEBUG: Invalid brandDefinition object that caused the error ---');
+        console.error(JSON.stringify(brandDefinition, (key, value) => {
+          // This is a replacer function to safely log File objects
+          if (value instanceof File) {
+              return {
+                  name: value.name,
+                  size: value.size,
+                  type: value.type,
+                  note: "This File object is likely causing the Firestore error."
+              };
+          }
+          return value;
+        }, 2));
+      }
       console.error('Error generating task:', error);
       throw new Error('Failed to generate task with AI.');
     }
@@ -752,5 +842,27 @@ IMPORTANT: Do not penalize for brief text if substantial, relevant files are pro
       console.error(`Error generating content for section ${sectionId}:`, error);
       throw error;
     }
+  },
+
+  updateTask: async (taskId: string, updatedData: Partial<Task>): Promise<Task> => {
+    const taskDocRef = doc(db, 'tasks', taskId);
+    await updateDoc(taskDocRef, updatedData);
+    
+    const updatedTaskSnap = await getDoc(taskDocRef);
+    if (!updatedTaskSnap.exists()) {
+      throw new Error("Failed to retrieve updated task");
+    }
+
+    const taskData = updatedTaskSnap.data();
+    return {
+      id: updatedTaskSnap.id,
+      ...taskData,
+      createdAt: (taskData.createdAt as Timestamp).toDate().toISOString(),
+      deadline: (taskData.deadline as Timestamp).toDate().toISOString(),
+    } as Task;
+  },
+
+  deleteTask: async (taskId: string): Promise<void> => {
+    // ... existing code ...
   },
 };

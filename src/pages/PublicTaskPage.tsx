@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { TaskResponse, FileAttachment } from '@/types';
 import ReactMarkdown from 'react-markdown';
 
-const CandidateSubmission = () => {
+const PublicTaskPage = () => {
   const { id } = useParams<{ id: string }>();
   const [candidateName, setCandidateName] = useState('');
   const [responseContent, setResponseContent] = useState('');
@@ -344,4 +344,4 @@ const CandidateSubmission = () => {
   );
 };
 
-export default CandidateSubmission;
+export default PublicTaskPage;
