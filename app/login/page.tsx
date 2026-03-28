@@ -4,10 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Target, Mail, Lock, ArrowRight, Sparkles, Eye, EyeOff } from "lucide-react";
+import { Target, Mail, Lock, ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
@@ -67,157 +66,116 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-card/50 border-r border-border/40 p-12 flex-col justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="bg-primary rounded-xl p-2.5 shadow-sm">
-            <Target className="h-6 w-6 text-primary-foreground" />
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <Link href="/" className="flex items-center justify-center gap-2 mb-8">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <Target className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="text-2xl brand-font">testask</span>
+          <span className="text-lg font-semibold">testask</span>
         </Link>
-        
-        <div className="max-w-md">
-          <h1 className="text-4xl font-bold tracking-tight mb-6 brand-font leading-tight">
-            Recruitment tasks powered by AI
+
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-semibold tracking-tight mb-2">
+            {isRegisterMode ? "Create an account" : "Welcome back"}
           </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-            Create custom assessments, analyze candidate responses, and make confident hiring decisions with intelligent insights.
+          <p className="text-sm text-muted-foreground">
+            {isRegisterMode
+              ? "Start creating AI-powered recruitment tasks"
+              : "Sign in to your account to continue"}
           </p>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <div className="flex -space-x-2">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 border-2 border-background flex items-center justify-center">
-                  <span className="text-xs font-medium text-primary">{String.fromCharCode(65 + i)}</span>
-                </div>
-              ))}
-            </div>
-            <span>Join 500+ companies already hiring smarter</span>
-          </div>
         </div>
-        
-        <p className="text-sm text-muted-foreground">
-          &copy; 2025 testask. All rights reserved.
-        </p>
-      </div>
 
-      {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md space-y-8">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex flex-col items-center text-center mb-8">
-            <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <div className="bg-primary rounded-xl p-2.5 shadow-sm">
-                <Target className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <span className="text-2xl brand-font">testask</span>
-            </Link>
-            <p className="text-muted-foreground text-sm">AI-powered recruitment platform</p>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-sm">Email</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                className="pl-9 h-10 rounded-lg"
+              />
+            </div>
           </div>
 
-          <Card className="glass-card border-border/60">
-            <CardHeader className="p-8 pb-6">
-              <CardTitle className="text-2xl font-semibold">
-                {isRegisterMode ? "Create your account" : "Welcome back"}
-              </CardTitle>
-              <CardDescription className="text-base">
-                {isRegisterMode
-                  ? "Start creating AI-powered recruitment tasks"
-                  : "Sign in to access your dashboard"}
-              </CardDescription>
-            </CardHeader>
-            
-            <form onSubmit={handleSubmit}>
-              <CardContent className="p-8 pt-0 space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email address</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@company.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      autoComplete="email"
-                      className="pl-10 h-11 rounded-xl form-input"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      autoComplete={isRegisterMode ? "new-password" : "current-password"}
-                      className="pl-10 pr-10 h-11 rounded-xl form-input"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                
-                {isRegisterMode && (
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="confirmPassword"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Confirm your password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        autoComplete="new-password"
-                        className="pl-10 h-11 rounded-xl form-input"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <Button type="submit" className="w-full h-11 rounded-xl btn-ai-gradient" disabled={isLoading}>
-                  {isLoading ? (
-                    <span className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 animate-spin" />
-                      {isRegisterMode ? "Creating account..." : "Signing in..."}
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      {isRegisterMode ? "Create account" : "Sign in"}
-                      <ArrowRight className="h-4 w-4" />
-                    </span>
-                  )}
-                </Button>
-              </CardContent>
-            </form>
-          </Card>
-
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {isRegisterMode ? "Already have an account?" : "Don\u0027t have an account?"}{" "}
-              <button onClick={toggleMode} className="text-primary hover:text-primary/80 font-medium transition-colors">
-                {isRegisterMode ? "Sign in" : "Create one"}
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-sm">Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete={isRegisterMode ? "new-password" : "current-password"}
+                className="pl-9 pr-9 h-10 rounded-lg"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
-            </p>
-            <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-              <ArrowRight className="h-3 w-3 rotate-180" />
-              Back to home
-            </Link>
+            </div>
           </div>
+
+          {isRegisterMode && (
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm">Confirm password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                  className="pl-9 h-10 rounded-lg"
+                />
+              </div>
+            </div>
+          )}
+
+          <Button type="submit" className="w-full h-10 rounded-lg" disabled={isLoading}>
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                {isRegisterMode ? "Create account" : "Sign in"}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </>
+            )}
+          </Button>
+        </form>
+
+        {/* Footer */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            {isRegisterMode ? "Already have an account?" : "Don't have an account?"}{" "}
+            <button onClick={toggleMode} className="text-foreground hover:underline font-medium">
+              {isRegisterMode ? "Sign in" : "Sign up"}
+            </button>
+          </p>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-border/50 text-center">
+          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Back to home
+          </Link>
         </div>
       </div>
     </div>
