@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { BarChart, Sparkles, ClipboardCheck, LogOut, Target } from "lucide-react";
+import { BarChart, Sparkles, ClipboardCheck, LogOut, Target, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -24,72 +24,82 @@ export default function Sidebar() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
-  }, []);
+  }, [supabase.auth]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast.success("Logged out successfully.");
+    toast.success("Logged out successfully");
     router.push("/login");
     router.refresh();
   };
 
   return (
-    <div className="hidden md:flex flex-col bg-sidebar-background w-64 border-r border-sidebar-border shadow-sm">
-      <div className="flex items-center p-6 border-b border-sidebar-border">
-        <div className="bg-primary rounded-xl p-2.5 mr-3 shadow-sm">
-          <Target className="h-5 w-5 text-primary-foreground" />
-        </div>
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl font-semibold text-sidebar-foreground brand-font">testask</span>
+    <div className="hidden md:flex flex-col bg-card/50 w-72 border-r border-border/40 backdrop-blur-sm">
+      {/* Logo */}
+      <div className="flex items-center p-6">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="bg-primary rounded-xl p-2.5 shadow-sm group-hover:shadow-md transition-shadow">
+            <Target className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <span className="text-xl brand-font text-foreground">testask</span>
         </Link>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      {/* Navigation */}
+      <nav className="flex-1 px-4 py-2 space-y-1">
         {navigationItems.map((item) => {
-          const isActive = item.exact
-            ? pathname === item.href
-            : pathname.startsWith(item.href);
+          const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                "nav-link flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
+                "flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group",
                 isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm nav-link-active"
-                  : "hover:bg-sidebar-accent/50 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                  ? "bg-primary/10 text-primary shadow-sm"
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
               )}
             >
-              <item.icon
-                className={cn(
-                  "mr-3 h-5 w-5 transition-colors",
-                  isActive ? "text-sidebar-primary" : "text-sidebar-foreground/50"
-                )}
-              />
-              {item.name}
+              <div className="flex items-center gap-3">
+                <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                <span>{item.name}</span>
+              </div>
+              {isActive && <ChevronRight className="h-4 w-4 text-primary/60" />}
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border flex flex-col items-center">
+      {/* User Section */}
+      <div className="p-4 border-t border-border/40">
         {user && (
-          <div className="px-3 py-3 mb-4 bg-sidebar-accent/30 rounded-lg w-full text-center">
-            <div className="font-medium text-sidebar-foreground text-sm truncate">
-              {user.user_metadata?.display_name || user.email?.split("@")[0] || "User"}
+          <div className="mb-4 p-4 bg-accent/30 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-semibold text-primary">
+                  {(user.user_metadata?.display_name || user.email?.split("@")[0] || "U")[0].toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-foreground text-sm truncate">
+                  {user.user_metadata?.display_name || user.email?.split("@")[0] || "User"}
+                </div>
+                <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+              </div>
             </div>
-            <div className="text-xs text-sidebar-foreground/60 truncate">{user.email}</div>
           </div>
         )}
+        
         <Button
           variant="ghost"
-          className="w-full max-w-xs justify-center text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all duration-200 mb-4"
+          className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-xl h-11"
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4 mr-3" />
-          Sign Out
+          Sign out
         </Button>
-        <p className="text-xs text-sidebar-muted-foreground text-center">testask ai &copy; 2025</p>
+        
+        <p className="text-xs text-muted-foreground text-center mt-4">&copy; 2025 testask</p>
       </div>
     </div>
   );

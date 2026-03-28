@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Send, Mail, Building, MessageSquare } from "lucide-react";
+import { Send, Mail, Building, MessageSquare, Sparkles } from "lucide-react";
 
 interface ContactSalesModalProps {
   children: React.ReactNode;
@@ -36,9 +36,8 @@ export default function ContactSalesModal({ children }: ContactSalesModalProps) 
       return;
     }
     setIsLoading(true);
-    // Simulate form submission
     await new Promise((r) => setTimeout(r, 800));
-    toast.success("Your request has been recorded! We'll get back to you within 24 hours.");
+    toast.success("Request sent! We\u0027ll get back to you within 24 hours.");
     setFormData({ email: "", companyName: "", request: "" });
     setIsOpen(false);
     setIsLoading(false);
@@ -51,37 +50,41 @@ export default function ContactSalesModal({ children }: ContactSalesModalProps) 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-            <Building className="h-5 w-5 text-primary" />
-            Contact Enterprise Sales
-          </DialogTitle>
-          <DialogDescription>
-            Tell us about your organization&apos;s needs and we&apos;ll get back to you with a custom solution.
-          </DialogDescription>
+      <DialogContent className="sm:max-w-[500px] bg-card/95 backdrop-blur-lg border-border/40 rounded-2xl">
+        <DialogHeader className="pb-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
+              <Building className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-semibold">Contact Enterprise Sales</DialogTitle>
+              <DialogDescription className="mt-1">
+                Tell us about your needs and we&apos;ll create a custom solution.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center gap-2 text-sm font-medium">
-                <Mail className="h-4 w-4" />
+                <Mail className="h-4 w-4 text-muted-foreground" />
                 Work Email
               </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="john@company.com"
+                placeholder="you@company.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 required
-                className="form-input mt-1"
+                className="h-11 rounded-xl form-input"
               />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="companyName" className="flex items-center gap-2 text-sm font-medium">
-                <Building className="h-4 w-4" />
+                <Building className="h-4 w-4 text-muted-foreground" />
                 Company Name
               </Label>
               <Input
@@ -91,42 +94,44 @@ export default function ContactSalesModal({ children }: ContactSalesModalProps) 
                 value={formData.companyName}
                 onChange={(e) => handleInputChange("companyName", e.target.value)}
                 required
-                className="form-input mt-1"
+                className="h-11 rounded-xl form-input"
               />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="request" className="flex items-center gap-2 text-sm font-medium">
-                <MessageSquare className="h-4 w-4" />
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 Tell us about your needs
               </Label>
               <Textarea
                 id="request"
-                placeholder="Describe your organization's requirements..."
+                placeholder="Describe your organization&apos;s requirements..."
                 rows={4}
                 value={formData.request}
                 onChange={(e) => handleInputChange("request", e.target.value)}
                 required
-                className="form-input mt-1 resize-none"
+                className="rounded-xl form-input resize-none"
               />
             </div>
           </div>
-          <div className="flex gap-3 pt-4">
+          
+          <div className="flex gap-3 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setIsOpen(false)}
-              className="flex-1"
+              className="flex-1 h-11 rounded-xl"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="flex-1 btn-ai-gradient">
+            <Button type="submit" disabled={isLoading} className="flex-1 h-11 btn-ai-gradient rounded-xl">
               {isLoading ? (
-                "Sending..."
+                <span className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 animate-spin" />Sending...
+                </span>
               ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Request
-                </>
+                <span className="flex items-center gap-2">
+                  <Send className="h-4 w-4" />Send Request
+                </span>
               )}
             </Button>
           </div>
