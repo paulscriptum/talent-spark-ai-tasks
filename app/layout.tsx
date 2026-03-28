@@ -1,15 +1,21 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
+import QueryProvider from "@/components/QueryProvider";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "TalentSpark AI - HR Task Generator",
-  description: "AI-powered platform for generating HR assessment tasks",
+  title: "testask - AI-Powered Recruitment Platform",
+  description:
+    "Create, share and check candidate assessments with testask — the AI-powered recruitment platform.",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#d97706",
+  themeColor: "#c9a87c",
 };
 
 export default function RootLayout({
@@ -19,8 +25,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-background antialiased">
-        {children}
+      <body className={`${inter.variable} font-sans min-h-screen bg-background antialiased`}>
+        <QueryProvider>
+          {children}
+          <Toaster richColors />
+        </QueryProvider>
       </body>
     </html>
   );
