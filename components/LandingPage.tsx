@@ -82,7 +82,7 @@ export default function LandingPage() {
             {/* Headline */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight mb-6 animate-reveal delay-100">
               <span className="block">Hire smarter with</span>
-              <span className="block font-display italic text-gradient mt-2">AI-crafted assessments</span>
+              <span className="block text-primary mt-2">AI-crafted assessments</span>
             </h1>
 
             {/* Subheadline */}
@@ -94,12 +94,12 @@ export default function LandingPage() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-reveal delay-300">
               <Link href="/generate">
-                <Button size="lg" className="h-13 px-8 text-base rounded-xl btn-accent shine">
+                <Button size="lg" className="h-12 px-8 text-base rounded-xl shadow-lg shadow-primary/25">
                   <Sparkles className="w-5 h-5 mr-2" />
                   Create your first task
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="h-13 px-8 text-base rounded-xl border-border/80 hover:bg-secondary/50">
+              <Button size="lg" variant="outline" className="h-12 px-8 text-base rounded-xl border-border hover:bg-card">
                 <Play className="w-5 h-5 mr-2" />
                 Watch demo
               </Button>
@@ -152,7 +152,7 @@ export default function LandingPage() {
             </div>
             <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
               Everything you need to
-              <span className="font-display italic text-gradient"> hire better</span>
+              <span className="text-primary"> hire better</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Powerful AI tools designed for modern recruitment teams
@@ -190,7 +190,7 @@ export default function LandingPage() {
             </div>
             <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
               Three steps to
-              <span className="font-display italic text-gradient"> perfect hiring</span>
+              <span className="text-primary"> perfect hiring</span>
             </h2>
           </div>
 
@@ -216,7 +216,7 @@ export default function LandingPage() {
 
           <div className="mt-12 text-center">
             <Link href="/generate">
-              <Button size="lg" className="h-13 px-8 text-base rounded-xl btn-accent">
+              <Button size="lg" className="h-12 px-8 text-base rounded-xl shadow-lg shadow-primary/25">
                 Start creating now
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
@@ -234,9 +234,7 @@ export default function LandingPage() {
               Pricing
             </div>
             <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-4">
-              Simple,
-              <span className="font-display italic text-gradient"> transparent </span>
-              pricing
+              Simple, <span className="text-primary">transparent</span> pricing
             </h2>
             <p className="text-lg text-muted-foreground">
               Start free, scale when you need
@@ -270,14 +268,14 @@ export default function LandingPage() {
             </div>
 
             {/* Professional - Featured */}
-            <div className="card-glow pricing-featured p-8 relative">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <div className="bg-accent text-accent-foreground px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-lg shadow-accent/25">
+            <div className="card-glow pricing-featured p-8 pt-10 relative mt-6 lg:mt-0">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                <div className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-lg shadow-primary/25 whitespace-nowrap">
                   <Star className="w-3.5 h-3.5" />
                   Most Popular
                 </div>
               </div>
-              <div className="mb-8 pt-2">
+              <div className="mb-8">
                 <h3 className="text-lg font-semibold mb-2">Professional</h3>
                 <div className="flex items-baseline gap-1 mb-2">
                   <span className="text-4xl font-semibold">$29</span>
@@ -294,7 +292,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link href="/login" className="block">
-                <Button className="w-full h-12 rounded-xl text-base btn-accent">
+                <Button className="w-full h-12 rounded-xl text-base">
                   Start free trial
                 </Button>
               </Link>
@@ -342,7 +340,7 @@ export default function LandingPage() {
                 Join hundreds of companies using TalentSpark to find exceptional candidates faster.
               </p>
               <Link href="/login">
-                <Button size="lg" className="h-13 px-10 text-base rounded-xl btn-accent">
+                <Button size="lg" className="h-12 px-10 text-base rounded-xl shadow-lg shadow-primary/25">
                   Get started for free
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>

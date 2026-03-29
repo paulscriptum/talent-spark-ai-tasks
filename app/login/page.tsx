@@ -88,7 +88,7 @@ export default function LoginPage() {
           <div className="max-w-md">
             <h1 className="text-4xl font-semibold tracking-tight mb-6 leading-tight">
               Hire smarter with
-              <span className="block font-display italic opacity-90 mt-1">AI-powered assessments</span>
+              <span className="block opacity-90 mt-1">AI-powered assessments</span>
             </h1>
             <p className="text-lg opacity-80 leading-relaxed mb-8">
               Create tailored recruitment tasks, evaluate candidates efficiently, 

@@ -17,8 +17,8 @@
     --popover: 40 40% 99%;
     --popover-foreground: 25 30% 12%;
 
-    --primary: 25 35% 22%;
-    --primary-foreground: 40 40% 97%;
+    --primary: 24 85% 52%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 32 30% 90%;
     --secondary-foreground: 25 30% 18%;
@@ -57,8 +57,8 @@
 
     --sidebar-background: 38 35% 96%;
     --sidebar-foreground: 25 30% 12%;
-    --sidebar-primary: 25 35% 22%;
-    --sidebar-primary-foreground: 40 40% 97%;
+    --sidebar-primary: 24 85% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 32 30% 92%;
     --sidebar-accent-foreground: 25 30% 15%;
     --sidebar-border: 32 25% 88%;
@@ -206,7 +206,7 @@
 
 .btn-primary-glow:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px hsl(25 35% 22% / 0.25);
+  box-shadow: 0 8px 24px hsl(24 85% 52% / 0.35);
 }
 
 /* Accent button */
