@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,26 +45,36 @@ export default function LoginPage() {
       if (isRegisterMode) {
         if (password !== confirmPassword) {
           toast.error("Passwords do not match");
+          setIsLoading(false);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: { display_name: email.split("@")[0] },
           },
         });
         if (error) throw error;
-        toast.success("Account created! Check your email to confirm.");
-        router.push("/dashboard");
-        router.refresh();
+        
+        // Check if email confirmation is required
+        if (data?.user?.identities?.length === 0) {
+          toast.error("An account with this email already exists.");
+        } else if (data?.user && !data?.session) {
+          toast.success("Check your email to confirm your account!");
+        } else {
+          toast.success("Account created!");
+          window.location.href = "/dashboard";
+          return;
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
-        router.push("/dashboard");
-        router.refresh();
+        // Use window.location for full page reload to ensure middleware picks up the new session
+        window.location.href = "/dashboard";
+        return;
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "An error occurred";
