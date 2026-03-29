@@ -24,8 +24,8 @@ export default function LandingPage() {
       <div className="fixed inset-0 hero-gradient pointer-events-none" />
       
       {/* Floating decorations */}
-      <div className="fixed top-20 right-[15%] w-72 h-72 bg-accent/5 rounded-full blur-3xl float" />
-      <div className="fixed bottom-40 left-[10%] w-96 h-96 bg-[hsl(42,90%,55%)]/5 rounded-full blur-3xl float-delay-2" />
+      <div className="fixed top-20 right-[15%] w-72 h-72 bg-primary/5 rounded-full blur-3xl float" />
+      <div className="fixed bottom-40 left-[10%] w-96 h-96 bg-primary/3 rounded-full blur-3xl float-delay-2" />
 
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass">

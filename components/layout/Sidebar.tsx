@@ -70,7 +70,7 @@ export default function Sidebar() {
       <div className="p-4 border-t border-border/60">
         {user && (
           <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-[hsl(42,90%,55%)]/10 flex items-center justify-center text-sm font-semibold text-accent">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-sm font-semibold text-primary">
               {(user.user_metadata?.display_name || user.email?.split("@")[0] || "U")[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">

@@ -205,7 +205,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full h-12 rounded-xl text-base btn-accent" disabled={isLoading}>
+            <Button type="submit" className="w-full h-12 rounded-xl text-base shadow-lg shadow-primary/25" disabled={isLoading}>
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
@@ -221,7 +221,7 @@ export default function LoginPage() {
           <div className="mt-8 text-center">
             <p className="text-muted-foreground">
               {isRegisterMode ? "Already have an account?" : "Don&apos;t have an account?"}{" "}
-              <button onClick={toggleMode} className="text-accent hover:underline font-medium">
+              <button onClick={toggleMode} className="text-primary hover:underline font-medium">
                 {isRegisterMode ? "Sign in" : "Create one"}
               </button>
             </p>

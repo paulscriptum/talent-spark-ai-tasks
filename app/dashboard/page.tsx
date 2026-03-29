@@ -32,7 +32,7 @@ export default function Dashboard() {
             </p>
           </div>
           <Link href="/generate">
-            <Button className="rounded-xl h-11 px-5 btn-accent">
+            <Button className="rounded-xl h-11 px-5 shadow-lg shadow-primary/25">
               <Sparkles className="w-4 h-4 mr-2" />
               Create task
             </Button>
@@ -87,7 +87,7 @@ export default function Dashboard() {
                   Create your first AI-powered recruitment task and start finding the perfect candidates.
                 </p>
                 <Link href="/generate">
-                  <Button className="rounded-xl h-11 px-6 btn-accent">
+                  <Button className="rounded-xl h-11 px-6 shadow-lg shadow-primary/25">
                     <Sparkles className="w-4 h-4 mr-2" />
                     Generate your first task
                   </Button>

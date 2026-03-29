@@ -277,7 +277,7 @@ export default function GenerateTask() {
           {/* Submit */}
           <Button
             type="submit"
-            className="w-full h-14 rounded-xl text-base btn-accent shine"
+            className="w-full h-14 rounded-xl text-base shadow-lg shadow-primary/25"
             disabled={isLoading}
           >
             {isLoading ? (

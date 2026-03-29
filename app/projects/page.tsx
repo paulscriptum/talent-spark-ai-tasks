@@ -30,7 +30,7 @@ export default function Projects() {
             </p>
           </div>
           <Link href="/generate">
-            <Button className="rounded-xl h-11 px-5 btn-accent">
+            <Button className="rounded-xl h-11 px-5 shadow-lg shadow-primary/25">
               <Sparkles className="w-4 h-4 mr-2" />
               Create task
             </Button>
@@ -57,7 +57,7 @@ export default function Projects() {
                 Create your first AI-powered recruitment task and start finding perfect candidates.
               </p>
               <Link href="/generate">
-                <Button className="rounded-xl h-12 px-8 btn-accent">
+                <Button className="rounded-xl h-12 px-8 shadow-lg shadow-primary/25">
                   <Sparkles className="w-5 h-5 mr-2" />
                   Generate your first task
                 </Button>
