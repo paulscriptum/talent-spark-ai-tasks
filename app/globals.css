@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 30% 96%;
+    --foreground: 20 20% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 20% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 20% 15%;
+    --primary: 24 90% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 35 20% 92%;
+    --secondary-foreground: 20 20% 20%;
+    --muted: 35 15% 90%;
+    --muted-foreground: 20 10% 45%;
+    --accent: 24 90% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 15% 88%;
+    --input: 30 15% 88%;
+    --ring: 24 90% 50%;
+    --radius: 0.75rem;
+    --sidebar-background: 40 30% 97%;
+    --sidebar-foreground: 20 20% 15%;
+    --sidebar-primary: 24 90% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 35 20% 93%;
+    --sidebar-accent-foreground: 20 20% 15%;
+    --sidebar-border: 30 15% 90%;
+    --sidebar-ring: 24 90% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  ::selection {
+    background: hsl(24 90% 50% / 0.2);
+  }
+}
+
+/* Grid pattern */
+.grid-pattern {
+  background-image: 
+    linear-gradient(hsl(30 15% 85% / 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(30 15% 85% / 0.4) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Gradient mesh */
+.mesh-bg {
+  background: 
+    radial-gradient(ellipse 80% 50% at 50% 0%, hsl(24 90% 50% / 0.06), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 30%, hsl(35 90% 55% / 0.04), transparent 40%);
+}
+
+/* Animations */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+
+/* Card with hover effect */
+.card-hover {
+  @apply relative bg-card rounded-xl border border-border/60 transition-all duration-300;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -15px hsl(24 90% 50% / 0.15);
+  border-color: hsl(24 90% 50% / 0.3);
+}
+
+/* Glass effect */
+.glass {
+  background: hsl(0 0% 100% / 0.8);
+  backdrop-blur: 20px;
+  border-bottom: 1px solid hsl(30 15% 88% / 0.8);
+}
+
+/* Button hover animation */
+.btn-hover {
+  @apply bg-primary text-white font-medium transition-all duration-300;
+}
+
+.btn-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px hsl(24 90% 50% / 0.4);
+}
+
+.btn-hover:active {
+  transform: translateY(0);
+}
+
+/* Tag */
+.tag {
+  @apply inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20;
+}
+
+/* Sidebar */
+.sidebar-item {
+  @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200;
+  color: hsl(20 10% 45%);
+}
+
+.sidebar-item:hover {
+  @apply bg-secondary;
+  color: hsl(20 20% 20%);
+}
+
+.sidebar-item-active {
+  @apply bg-primary/10;
+  color: hsl(20 20% 15%);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(30 15% 80%); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(30 15% 70%); }
+
+/* Focus */
+:focus-visible {
+  @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-semibold tracking-tight text-foreground;
+}
