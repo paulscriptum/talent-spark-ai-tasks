@@ -41,7 +41,7 @@ export default function Sidebar() {
           <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/15">
             <Target className="w-4.5 h-4.5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-semibold tracking-tight">TalentSpark</span>
+          <span className="text-lg font-semibold tracking-tight">testask</span>
         </Link>
       </div>
 

@@ -81,7 +81,7 @@ export default function LoginPage() {
             <div className="w-10 h-10 rounded-xl bg-primary-foreground/10 backdrop-blur flex items-center justify-center border border-primary-foreground/20">
               <Target className="w-5 h-5" />
             </div>
-            <span className="text-xl font-semibold">TalentSpark</span>
+            <span className="text-xl font-semibold">testask</span>
           </Link>
 
           {/* Content */}
@@ -128,7 +128,7 @@ export default function LoginPage() {
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
               <Target className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-semibold">TalentSpark</span>
+            <span className="text-xl font-semibold">testask</span>
           </Link>
 
           {/* Header */}

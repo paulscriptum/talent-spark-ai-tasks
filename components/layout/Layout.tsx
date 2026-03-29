@@ -12,10 +12,10 @@ interface LayoutProps {
 export default function Layout({ children, className }: LayoutProps) {
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Subtle background decoration */}
+      {/* Subtle background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent/3 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[hsl(42,90%,55%)]/3 rounded-full blur-3xl" />
+        <div className="absolute inset-0 grid-pattern opacity-20" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/3 rounded-full blur-[100px]" />
       </div>
       
       <Sidebar />
@@ -28,7 +28,7 @@ export default function Layout({ children, className }: LayoutProps) {
               <div className="bg-primary rounded-xl p-2 shadow-md shadow-primary/15">
                 <Target className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="text-lg font-semibold tracking-tight">TalentSpark</span>
+              <span className="text-lg font-semibold tracking-tight">testask</span>
             </Link>
           </div>
         </header>

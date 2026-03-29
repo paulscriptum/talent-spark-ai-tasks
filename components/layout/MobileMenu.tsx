@@ -53,7 +53,7 @@ export default function MobileMenu() {
                 <div className="bg-primary rounded-xl p-2.5 shadow-md shadow-primary/15">
                   <Target className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <span className="text-xl font-semibold tracking-tight">TalentSpark</span>
+                <span className="text-xl font-semibold tracking-tight">testask</span>
               </Link>
             </div>
 
@@ -88,8 +88,8 @@ export default function MobileMenu() {
               {user && (
                 <div className="mb-4 p-4 bg-card border border-border/50 rounded-xl">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-[hsl(42,90%,55%)]/10 flex items-center justify-center">
-                      <span className="text-sm font-semibold text-accent">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-primary">
                         {(user.user_metadata?.display_name || user.email?.split("@")[0] || "U")[0].toUpperCase()}
                       </span>
                     </div>
@@ -112,7 +112,7 @@ export default function MobileMenu() {
                 Sign out
               </Button>
               
-              <p className="text-xs text-muted-foreground text-center mt-4">&copy; 2025 TalentSpark</p>
+              <p className="text-xs text-muted-foreground text-center mt-4">&copy; 2025 testask</p>
             </div>
           </div>
         </SheetContent>
