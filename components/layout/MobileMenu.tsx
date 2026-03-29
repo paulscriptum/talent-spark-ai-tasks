@@ -45,15 +45,15 @@ export default function MobileMenu() {
             <span className="sr-only">Toggle menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="bg-card/95 backdrop-blur-lg border-border/40 p-0 w-72">
+        <SheetContent side="left" className="glass border-border/60 p-0 w-72">
           <div className="flex flex-col h-full">
             {/* Logo */}
-            <div className="flex items-center p-6 border-b border-border/40">
+            <div className="flex items-center p-6 border-b border-border/60">
               <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-                <div className="bg-primary rounded-xl p-2.5 shadow-sm">
+                <div className="bg-primary rounded-xl p-2.5 shadow-md shadow-primary/15">
                   <Target className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <span className="text-xl brand-font text-foreground">testask</span>
+                <span className="text-xl font-semibold tracking-tight">TalentSpark</span>
               </Link>
             </div>
 
@@ -84,12 +84,12 @@ export default function MobileMenu() {
             </nav>
 
             {/* User Section */}
-            <div className="p-4 border-t border-border/40">
+            <div className="p-4 border-t border-border/60">
               {user && (
-                <div className="mb-4 p-4 bg-accent/30 rounded-xl">
+                <div className="mb-4 p-4 bg-card border border-border/50 rounded-xl">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-semibold text-primary">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-[hsl(42,90%,55%)]/10 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-accent">
                         {(user.user_metadata?.display_name || user.email?.split("@")[0] || "U")[0].toUpperCase()}
                       </span>
                     </div>
@@ -112,7 +112,7 @@ export default function MobileMenu() {
                 Sign out
               </Button>
               
-              <p className="text-xs text-muted-foreground text-center mt-4">&copy; 2025 testask</p>
+              <p className="text-xs text-muted-foreground text-center mt-4">&copy; 2025 TalentSpark</p>
             </div>
           </div>
         </SheetContent>

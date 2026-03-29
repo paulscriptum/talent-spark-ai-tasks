@@ -5,9 +5,8 @@ import { taskService } from "@/lib/taskService";
 import Layout from "@/components/layout/Layout";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
-import { FileText, Plus, Users, ArrowRight, Sparkles, Loader2 } from "lucide-react";
+import { FileText, Plus, Users, ArrowRight, Sparkles, Loader2, FolderOpen, Clock } from "lucide-react";
 
 export default function Projects() {
   const { data: tasks, isLoading } = useQuery({
@@ -17,80 +16,92 @@ export default function Projects() {
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Manage your recruitment tasks
+            <div className="tag mb-3 w-fit">
+              <FolderOpen className="w-3.5 h-3.5 mr-1.5" />
+              All Projects
+            </div>
+            <h1 className="text-3xl font-semibold tracking-tight mb-1">Your Projects</h1>
+            <p className="text-muted-foreground">
+              Manage and track all your recruitment tasks
             </p>
           </div>
           <Link href="/generate">
-            <Button size="sm" className="rounded-lg">
-              <Plus className="w-4 h-4 mr-2" />
-              New task
+            <Button className="rounded-xl h-11 px-5 btn-accent">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Create task
             </Button>
           </Link>
         </div>
 
         {/* Content */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-24">
+            <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+              <Loader2 className="w-7 h-7 animate-spin text-accent" />
+            </div>
+            <p className="text-muted-foreground">Loading your projects...</p>
           </div>
         ) : tasks?.length === 0 ? (
-          <div className="p-12 rounded-xl border border-border/50 border-dashed text-center">
-            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-6 h-6 text-muted-foreground" />
+          <div className="card-glow p-16 text-center relative overflow-hidden">
+            <div className="absolute inset-0 mesh-gradient opacity-30" />
+            <div className="relative">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-accent/20 to-[hsl(42,90%,55%)]/10 flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="w-9 h-9 text-accent" />
+              </div>
+              <h3 className="text-2xl font-semibold mb-3">No projects yet</h3>
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
+                Create your first AI-powered recruitment task and start finding perfect candidates.
+              </p>
+              <Link href="/generate">
+                <Button className="rounded-xl h-12 px-8 btn-accent">
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Generate your first task
+                </Button>
+              </Link>
             </div>
-            <h3 className="font-medium mb-1">No projects yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create your first AI-powered recruitment task
-            </p>
-            <Link href="/generate">
-              <Button size="sm" className="rounded-lg">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate task
-              </Button>
-            </Link>
           </div>
         ) : (
-          <div className="rounded-xl border border-border/50 divide-y divide-border/50">
+          <div className="grid gap-4">
             {tasks?.map((task) => (
               <Link
                 key={task.id}
                 href={`/projects/${task.id}`}
-                className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors group"
+                className="card-premium p-6 group block"
               >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                    <FileText className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-medium truncate group-hover:text-primary transition-colors">
-                      {task.title}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-5 min-w-0">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent/15 to-[hsl(42,90%,55%)]/5 flex items-center justify-center shrink-0 group-hover:from-accent/20 group-hover:to-[hsl(42,90%,55%)]/10 transition-colors">
+                      <FileText className="w-6 h-6 text-accent" />
                     </div>
-                    <div className="text-sm text-muted-foreground flex items-center gap-3 mt-0.5">
-                      <span>{task.brandDefinition.companyName}</span>
-                      <span className="text-muted-foreground/50">·</span>
-                      <span className="flex items-center gap-1">
-                        <Users className="w-3.5 h-3.5" />
-                        {task.responses.length}
-                      </span>
-                      <span className="text-muted-foreground/50">·</span>
-                      <span>{formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-lg truncate group-hover:text-accent transition-colors">
+                        {task.title}
+                      </h3>
+                      <div className="flex items-center gap-4 mt-1.5 text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground/70">{task.brandDefinition.companyName}</span>
+                        <div className="flex items-center gap-1.5">
+                          <Users className="w-4 h-4" />
+                          <span>{task.responses.length} response{task.responses.length !== 1 ? "s" : ""}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-4 h-4" />
+                          <span>{formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <Badge
-                    variant={task.status === "active" ? "default" : "secondary"}
-                    className="rounded-md"
-                  >
-                    {task.status}
-                  </Badge>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  <div className="flex items-center gap-4 shrink-0">
+                    <div className={`tag ${task.status === "active" ? "" : "tag-success"}`}>
+                      {task.status === "active" ? "Active" : "Completed"}
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-accent/10 transition-colors">
+                      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                  </div>
                 </div>
               </Link>
             ))}
