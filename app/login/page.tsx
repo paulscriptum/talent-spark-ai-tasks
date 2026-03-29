@@ -71,8 +71,8 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 relative bg-primary overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-80 h-80 bg-[hsl(42,90%,55%)]/15 rounded-full blur-3xl" />
+          <div className="absolute top-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl" />
         </div>
         
         <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground">
@@ -103,8 +103,8 @@ export default function LoginPage() {
                 "Collaborative hiring decisions",
               ].map((feature, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
+                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                   </div>
                   <span className="opacity-90">{feature}</span>
                 </div>

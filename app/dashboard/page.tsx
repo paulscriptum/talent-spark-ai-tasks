@@ -49,8 +49,8 @@ export default function Dashboard() {
           ].map((stat, i) => (
             <div key={i} className="card-premium p-6 group">
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-[hsl(42,90%,55%)]/5 flex items-center justify-center group-hover:from-accent/20 group-hover:to-[hsl(42,90%,55%)]/10 transition-colors">
-                  <stat.icon className="w-5 h-5 text-accent" />
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                  <stat.icon className="w-5 h-5 text-primary" />
                 </div>
                 <TrendingUp className="w-4 h-4 text-muted-foreground/50" />
               </div>
@@ -69,7 +69,7 @@ export default function Dashboard() {
               <h2 className="text-lg font-semibold">Recent Tasks</h2>
               <p className="text-sm text-muted-foreground">Your latest recruitment assessments</p>
             </div>
-            <Link href="/projects" className="text-sm text-accent hover:underline flex items-center gap-1">
+            <Link href="/projects" className="text-sm text-primary hover:underline flex items-center gap-1">
               View all
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -79,8 +79,8 @@ export default function Dashboard() {
             <div className="card-glow p-16 text-center relative overflow-hidden">
               <div className="absolute inset-0 mesh-gradient opacity-30" />
               <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-[hsl(42,90%,55%)]/10 flex items-center justify-center mx-auto mb-5">
-                  <Sparkles className="w-7 h-7 text-accent" />
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                  <Sparkles className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">No tasks yet</h3>
                 <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
@@ -103,11 +103,11 @@ export default function Dashboard() {
                   className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors group"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/10 to-[hsl(42,90%,55%)]/5 flex items-center justify-center shrink-0 group-hover:from-accent/15 group-hover:to-[hsl(42,90%,55%)]/10 transition-colors">
-                      <FileText className="w-5 h-5 text-accent" />
+                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                      <FileText className="w-5 h-5 text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <div className="font-medium truncate group-hover:text-accent transition-colors">
+                      <div className="font-medium truncate group-hover:text-primary transition-colors">
                         {task.title}
                       </div>
                       <div className="text-sm text-muted-foreground flex items-center gap-2 mt-0.5">
@@ -121,7 +121,7 @@ export default function Dashboard() {
                     <Badge className="tag">
                       {task.responses.length} response{task.responses.length !== 1 ? "s" : ""}
                     </Badge>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                   </div>
                 </Link>
               ))}
@@ -134,13 +134,13 @@ export default function Dashboard() {
           <Link href="/generate" className="group">
             <div className="card-premium p-6 h-full">
               <div className="flex items-start gap-5">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent/20 to-[hsl(42,90%,55%)]/10 flex items-center justify-center shrink-0 group-hover:shadow-lg group-hover:shadow-accent/15 transition-shadow">
-                  <Sparkles className="w-6 h-6 text-accent" />
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-all">
+                  <Sparkles className="w-6 h-6 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold group-hover:text-accent transition-colors">Generate New Task</h3>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                    <h3 className="font-semibold group-hover:text-primary transition-colors">Generate New Task</h3>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                   </div>
                   <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                     Create AI-powered recruitment assessments tailored to your brand and requirements.
